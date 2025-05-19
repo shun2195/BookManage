@@ -8,15 +8,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Kết nối MongoDB
+// ======= Kết nối MongoDB =======
 mongoose.connect("mongodb+srv://nik2192005:Nhung123@cluster0.0wm9yn7.mongodb.net/bookdb?retryWrites=true&w=majority&appName=Cluster0", {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
 
-// ==================== Mô hình ====================
-
-// Book
+// ======= Mô hình =======
 const Book = mongoose.model("Book", new mongoose.Schema({
   title: String,
   author: String,
@@ -24,27 +22,34 @@ const Book = mongoose.model("Book", new mongoose.Schema({
   category: String,
 }));
 
-// User
 const User = mongoose.model("User", new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
   password: String,
   role: { type: String, default: "user" }
 }));
-(async () => {
-  const hashed = await bcrypt.hash("admin123", 10);
-  await User.create({
-    name: "Admin Quản trị",
-    email: "admin@example.com",
-    password: hashed,
-    role: "admin"
-  });
-  console.log("✅ Admin created");
-  process.exit();
-})();
-// ==================== API ====================
 
-// 📚 Lấy danh sách sách
+// ======= Tạo admin nếu chưa có =======
+(async () => {
+  const adminEmail = "admin@example.com";
+  const exists = await User.findOne({ email: adminEmail });
+  if (!exists) {
+    const hashed = await bcrypt.hash("admin123", 10);
+    await User.create({
+      name: "Admin Quản trị",
+      email: adminEmail,
+      password: hashed,
+      role: "admin"
+    });
+    console.log("✅ Tài khoản admin đã được tạo: admin@example.com / admin123");
+  } else {
+    console.log("ℹ️ Tài khoản admin đã tồn tại.");
+  }
+})();
+
+// ======= API =======
+
+// 📚 Danh sách sách
 app.get("/books", async (req, res) => {
   const books = await Book.find();
   res.json(books);
@@ -57,22 +62,17 @@ app.post("/books", async (req, res) => {
   res.json(book);
 });
 
-// 🟢 API Đăng ký
+// 🟢 Đăng ký tài khoản
 app.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
 
-  // Kiểm tra email trùng
   const existingUser = await User.findOne({ email });
   if (existingUser) return res.status(400).json({ message: "Email đã tồn tại" });
 
-  // Mã hóa mật khẩu
   const hashedPassword = await bcrypt.hash(password, 10);
-
-  // Tạo user mới
   const newUser = new User({ name, email, password: hashedPassword });
   await newUser.save();
 
-  // JWT
   const token = jwt.sign({ userId: newUser._id }, "secret_key", { expiresIn: "1h" });
 
   res.json({
@@ -83,7 +83,7 @@ app.post("/register", async (req, res) => {
   });
 });
 
-// 🔑 API Đăng nhập
+// 🔐 Đăng nhập
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
