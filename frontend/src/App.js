@@ -1,17 +1,35 @@
 import React, { useState } from "react";
-import BookManager from "./BookManage";
+import BookManager from "./BookManager";
 import LoginForm from "./LoginForm";
+import RegisterForm from "./RegisterForm";
+import BookStats from "./BookStats";
 import Layout from "./components/Layout";
+import UserProfile from "./UserProfile";
+import ChangePassword from "./ChangePassword";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [currentPage, setCurrentPage] = useState("books");
+  
+  if (isLoggedIn) {
+    return (
+      <Layout onNavigate={setCurrentPage}>
+        {currentPage === "books" && <BookManager />}
+        {currentPage === "profile" && <UserProfile />}
+        {currentPage === "stats" && <BookStats />}
+      </Layout>
 
-  return isLoggedIn ? (
-    <Layout>
-      <BookManager />
-    </Layout>
+    );
+  }
+
+  return isRegistering ? (
+    <RegisterForm onSwitchToLogin={() => setIsRegistering(false)} />
   ) : (
-    <LoginForm onLoginSuccess={() => setIsLoggedIn(true)} />
+    <LoginForm
+      onLoginSuccess={() => setIsLoggedIn(true)}
+      onSwitchToRegister={() => setIsRegistering(true)}
+    />
   );
 }
 

@@ -1,13 +1,29 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useRef, useEffect } from "react";
 
-export default function Layout({ children }) {
-  const navigate = useNavigate();
+export default function Layout({ children, onNavigate }) {
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef();
+
+  const role = localStorage.getItem("role");
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    window.location.reload(); // hoặc navigate("/") nếu dùng react-router
+    localStorage.removeItem("role");
+    localStorage.removeItem("name");
+    localStorage.removeItem("email");
+    window.location.reload();
   };
+
+  // Đóng menu khi click ra ngoài
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div>
@@ -17,9 +33,76 @@ export default function Layout({ children }) {
           <h3 className="m-0">
             📚 <span className="fw-bold">Quản lý sách</span>
           </h3>
-          <button className="btn btn-outline-light btn-sm" onClick={handleLogout}>
-            🚪 Đăng xuất
-          </button>
+
+          {/* Avatar menu */}
+          <div className="position-relative" ref={menuRef}>
+            <button
+              className="btn btn-light rounded-circle"
+              style={{ width: 40, height: 40 }}
+              onClick={() => setShowMenu(!showMenu)}
+            >
+              👤
+            </button>
+
+            {showMenu && (
+              <ul
+                className="position-absolute end-0 mt-2 bg-white border rounded shadow-sm text-dark"
+                style={{ listStyle: "none", minWidth: "180px", zIndex: 999 }}
+              >
+                <li className="px-3 py-2 border-bottom text-muted">
+                  Vai trò: <strong>{role || "?"}</strong>
+                </li>
+                <li
+                  className="px-3 py-2 border-bottom"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {
+                    setShowMenu(false);
+                    onNavigate("profile");
+                  }}
+                >
+                  👤 Trang cá nhân
+                </li>
+                <li
+                  className="px-3 py-2 border-bottom"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {
+                    setShowMenu(false);
+                    onNavigate("books");
+                  }}
+                >
+                  📚 Quản lý sách
+                </li>
+                <li
+                  className="px-3 py-2 border-bottom"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {
+                    setShowMenu(false);
+                    onNavigate("stats");
+                  }}
+                >
+                  📊 Thống kê
+                </li>
+                <li
+                  className="px-3 py-2 border-bottom"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {
+                    setShowMenu(false);
+                    onNavigate("changepw");
+                  }}
+                >
+                  🔐 Đổi mật khẩu
+                </li>
+
+                <li
+                  className="px-3 py-2"
+                  style={{ cursor: "pointer" }}
+                  onClick={handleLogout}
+                >
+                  🚪 Đăng xuất
+                </li>
+              </ul>
+            )}
+          </div>
         </div>
       </header>
 
@@ -28,9 +111,7 @@ export default function Layout({ children }) {
 
       {/* ===== Footer ===== */}
       <footer className="bg-light text-center py-3 border-top">
-        <small>
-          © 2025 Nhóm Nhung - Trúc | Website quản lý sách với React + Node.js
-        </small>
+        <small>© 2025 Nhung - Trúc | Website quản lý sách</small>
       </footer>
     </div>
   );

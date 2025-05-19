@@ -6,7 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 // 🔗 Sử dụng API thật trên Render
 const API = "https://bookmanage-backend-ywce.onrender.com";
 
-function LoginForm({ onLoginSuccess }) {
+function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -15,8 +15,12 @@ function LoginForm({ onLoginSuccess }) {
     try {
       const res = await axios.post(`${API}/login`, { email, password });
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("role", res.data.role); // Lưu vai trò
+      localStorage.setItem("name", res.data.name);
+      localStorage.setItem("email", email); // vì gửi email đăng nhập
       toast.success("✅ Đăng nhập thành công!");
-      onLoginSuccess(); // Gọi hàm chuyển sang App
+      onLoginSuccess();
+
     } catch (err) {
       toast.error("❌ Sai tài khoản hoặc mật khẩu");
     }
@@ -47,6 +51,11 @@ function LoginForm({ onLoginSuccess }) {
           />
         </div>
         <button type="submit" className="btn btn-primary w-100">Đăng nhập</button>
+        <div className="text-center mt-3">
+            <button type="button" className="btn btn-link" onClick={onSwitchToRegister}>
+                📝 Chưa có tài khoản? Đăng ký
+            </button>
+        </div>
       </form>
       <ToastContainer />
     </div>

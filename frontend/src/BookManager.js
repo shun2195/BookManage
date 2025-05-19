@@ -14,6 +14,10 @@ function BookManager() {
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const booksPerPage = 5;
+
+  const role = localStorage.getItem("role");
 
   const loadBooks = async () => {
     try {
@@ -69,17 +73,12 @@ function BookManager() {
   const uniqueCategories = [...new Set(books.map((book) => book.category))];
 
   const exportToExcel = () => {
-    const exportData = books
-      .filter(book =>
-        book.title.toLowerCase().includes(search.toLowerCase()) &&
-        (filterCategory === "" || book.category === filterCategory)
-      )
-      .map(book => ({
-        "Tiêu đề": book.title,
-        "Tác giả": book.author,
-        "Năm": book.year,
-        "Thể loại": book.category,
-      }));
+    const exportData = filteredBooks.map(book => ({
+      "Tiêu đề": book.title,
+      "Tác giả": book.author,
+      "Năm": book.year,
+      "Thể loại": book.category,
+    }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
@@ -89,6 +88,17 @@ function BookManager() {
     const file = new Blob([excelBuffer], { type: "application/octet-stream" });
     saveAs(file, "DanhSachSach.xlsx");
   };
+
+  const filteredBooks = books.filter(book =>
+    book.title.toLowerCase().includes(search.toLowerCase()) &&
+    (filterCategory === "" || book.category === filterCategory)
+  );
+
+  const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
+  const paginatedBooks = filteredBooks.slice(
+    (currentPage - 1) * booksPerPage,
+    currentPage * booksPerPage
+  );
 
   return (
     <div className="container mt-5">
@@ -119,14 +129,20 @@ function BookManager() {
             className="form-control"
             placeholder="🔍 Tìm theo tiêu đề..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
           />
         </div>
         <div className="col-md-4">
           <select
             className="form-select"
             value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
+            onChange={(e) => {
+              setFilterCategory(e.target.value);
+              setCurrentPage(1);
+            }}
           >
             <option value="">📂 Tất cả thể loại</option>
             {uniqueCategories.map((cat, idx) => (
@@ -152,25 +168,38 @@ function BookManager() {
           </tr>
         </thead>
         <tbody>
-          {books
-            .filter(book =>
-              book.title.toLowerCase().includes(search.toLowerCase()) &&
-              (filterCategory === "" || book.category === filterCategory)
-            )
-            .map((book) => (
-              <tr key={book._id}>
-                <td>{book.title}</td>
-                <td>{book.author}</td>
-                <td>{book.year}</td>
-                <td>{book.category}</td>
-                <td>
-                  <button className="btn btn-primary btn-sm me-2" onClick={() => handleEdit(book)}>Sửa</button>
+          {paginatedBooks.map((book) => (
+            <tr key={book._id}>
+              <td>{book.title}</td>
+              <td>{book.author}</td>
+              <td>{book.year}</td>
+              <td>{book.category}</td>
+              <td>
+                <button className="btn btn-primary btn-sm me-2" onClick={() => handleEdit(book)}>Sửa</button>
+                {role === "admin" && (
                   <button className="btn btn-danger btn-sm" onClick={() => handleDelete(book._id)}>Xoá</button>
-                </td>
-              </tr>
-            ))}
+                )}
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
+
+      {/* Pagination */}
+      <nav className="d-flex justify-content-center mt-3">
+        <ul className="pagination">
+          {Array.from({ length: totalPages }, (_, i) => (
+            <li
+              key={i}
+              className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
+              style={{ cursor: "pointer" }}
+              onClick={() => setCurrentPage(i + 1)}
+            >
+              <span className="page-link">{i + 1}</span>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
       <ToastContainer />
     </div>
