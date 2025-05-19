@@ -31,7 +31,17 @@ const User = mongoose.model("User", new mongoose.Schema({
   password: String,
   role: { type: String, default: "user" }
 }));
-
+(async () => {
+  const hashed = await bcrypt.hash("admin123", 10);
+  await User.create({
+    name: "Admin Quản trị",
+    email: "admin@example.com",
+    password: hashed,
+    role: "admin"
+  });
+  console.log("✅ Admin created");
+  process.exit();
+})();
 // ==================== API ====================
 
 // 📚 Lấy danh sách sách
