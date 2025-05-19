@@ -3,17 +3,21 @@ import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
-function App() {
+const API = "https://bookmanage-backend-ywce.onrender.com";
+
+function BookManager() {
   const [books, setBooks] = useState([]);
   const [form, setForm] = useState({ title: "", author: "", year: "", category: "" });
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
+  const [filterCategory, setFilterCategory] = useState("");
 
-  // Load danh sách sách từ backend
   const loadBooks = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/books");
+      const res = await axios.get(`${API}/books`);
       setBooks(res.data);
     } catch (error) {
       toast.error("❌ Không thể tải danh sách sách");
@@ -24,21 +28,19 @@ function App() {
     loadBooks();
   }, []);
 
-  // Xử lý nhập liệu
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Thêm hoặc cập nhật sách
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (editingId) {
-        await axios.put(`http://localhost:5000/books/${editingId}`, form);
+        await axios.put(`${API}/books/${editingId}`, form);
         toast.success("📘 Cập nhật thành công!");
         setEditingId(null);
       } else {
-        await axios.post("http://localhost:5000/books", form);
+        await axios.post(`${API}/books`, form);
         toast.success("📗 Thêm sách mới thành công!");
       }
       setForm({ title: "", author: "", year: "", category: "" });
@@ -48,17 +50,15 @@ function App() {
     }
   };
 
-  // Gán dữ liệu sách để sửa
   const handleEdit = (book) => {
     setForm(book);
     setEditingId(book._id);
   };
 
-  // Xoá sách
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc chắn muốn xoá sách này?")) return;
     try {
-      await axios.delete(`http://localhost:5000/books/${id}`);
+      await axios.delete(`${API}/books/${id}`);
       toast.info("🗑️ Đã xoá sách");
       loadBooks();
     } catch (error) {
@@ -66,11 +66,34 @@ function App() {
     }
   };
 
+  const uniqueCategories = [...new Set(books.map((book) => book.category))];
+
+  const exportToExcel = () => {
+    const exportData = books
+      .filter(book =>
+        book.title.toLowerCase().includes(search.toLowerCase()) &&
+        (filterCategory === "" || book.category === filterCategory)
+      )
+      .map(book => ({
+        "Tiêu đề": book.title,
+        "Tác giả": book.author,
+        "Năm": book.year,
+        "Thể loại": book.category,
+      }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Danh sách sách");
+
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const file = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(file, "DanhSachSach.xlsx");
+  };
+
   return (
     <div className="container mt-5">
       <h2 className="mb-4 text-primary">📚 Quản lý sách</h2>
 
-      {/* Form nhập sách */}
       <form onSubmit={handleSubmit} className="row g-3 mb-4">
         <div className="col-md-3">
           <input name="title" className="form-control" placeholder="Tiêu đề" value={form.title} onChange={handleChange} required />
@@ -89,9 +112,8 @@ function App() {
         </div>
       </form>
 
-      {/* Ô tìm kiếm */}
       <div className="row mb-3">
-        <div className="col-md-4">
+        <div className="col-md-4 mb-2">
           <input
             type="text"
             className="form-control"
@@ -100,9 +122,25 @@ function App() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        <div className="col-md-4">
+          <select
+            className="form-select"
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+          >
+            <option value="">📂 Tất cả thể loại</option>
+            {uniqueCategories.map((cat, idx) => (
+              <option key={idx} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </div>
+        <div className="col-md-4 text-end">
+          <button className="btn btn-outline-success" onClick={exportToExcel}>
+            📤 Xuất Excel
+          </button>
+        </div>
       </div>
 
-      {/* Bảng danh sách sách */}
       <table className="table table-striped table-bordered">
         <thead className="table-dark">
           <tr>
@@ -115,7 +153,10 @@ function App() {
         </thead>
         <tbody>
           {books
-            .filter((book) => book.title.toLowerCase().includes(search.toLowerCase()))
+            .filter(book =>
+              book.title.toLowerCase().includes(search.toLowerCase()) &&
+              (filterCategory === "" || book.category === filterCategory)
+            )
             .map((book) => (
               <tr key={book._id}>
                 <td>{book.title}</td>
@@ -136,4 +177,4 @@ function App() {
   );
 }
 
-export default App;
+export default BookManager;
