@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken");
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use("/uploads", express.static("uploads"));
 
 // ======= Kết nối MongoDB =======
 mongoose.connect("mongodb+srv://nik2192005:Nhung123@cluster0.0wm9yn7.mongodb.net/bookdb?retryWrites=true&w=majority&appName=Cluster0", {
@@ -27,7 +28,9 @@ const User = mongoose.model("User", new mongoose.Schema({
   email: { type: String, unique: true },
   password: String,
   role: { type: String, default: "user" }, // user, admin, mod, guest, superadmin
+  avatarUrl: { type: String, default: "" },
   isLocked: { type: Boolean, default: false }
+  
 }));
 
 const BorrowRecord = mongoose.model("BorrowRecord", new mongoose.Schema({
@@ -44,6 +47,19 @@ const BorrowRecord = mongoose.model("BorrowRecord", new mongoose.Schema({
   }
 }));
 
+const multer = require("multer");
+const path = require("path");
+
+// Cấu hình lưu ảnh
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, "uploads/"),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const fileName = `${req.user.userId}_${Date.now()}${ext}`;
+    cb(null, fileName);
+  },
+});
+const upload = multer({ storage });
 // ======= Tạo admin và mod nếu chưa có =======
 (async () => {
   const usersToCreate = [
@@ -91,6 +107,7 @@ const isModOrAdmin = async (req, res, next) => {
 };
 
 // ======= API =======
+
 
 // ========📚 API sách=========
 // 📚 Lấy danh sách sách (ai cũng xem được)
@@ -257,6 +274,13 @@ app.put("/users/:id/role", authMiddleware, isAdmin, async (req, res) => {
 
   await User.findByIdAndUpdate(req.params.id, { role });
   res.json({ message: "Đã cập nhật vai trò người dùng" });
+});
+
+// Upload avatar
+app.post("/users/upload-avatar", authMiddleware, upload.single("avatar"), async (req, res) => {
+  const url = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+  await User.findByIdAndUpdate(req.user.userId, { avatarUrl: url });
+  res.json({ avatarUrl: url });
 });
 
 // ✅ Khởi động server

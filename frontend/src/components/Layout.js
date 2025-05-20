@@ -5,12 +5,15 @@ export default function Layout({ children, onNavigate }) {
   const menuRef = useRef();
 
   const role = localStorage.getItem("role");
+  const name = localStorage.getItem("name") || "User";
+
+  // ✅ Nếu người dùng đã upload avatar, dùng ảnh đó
+  const avatar =
+    localStorage.getItem("avatarUrl") ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("name");
-    localStorage.removeItem("email");
+    localStorage.clear();
     window.location.reload();
   };
 
@@ -49,6 +52,16 @@ export default function Layout({ children, onNavigate }) {
                   </span>
                 </>
               )}
+              {role === "mod" && (
+                <span style={{ cursor: "pointer" }} onClick={() => onNavigate("moderation")}>
+                  🛠 Kiểm duyệt sách
+                </span>
+              )}
+              {role === "superadmin" && (
+                <span style={{ cursor: "pointer" }} onClick={() => onNavigate("system")}>
+                  ⚙️ Quản lý hệ thống
+                </span>
+              )}
               {role === "user" && (
                 <span style={{ cursor: "pointer" }} onClick={() => onNavigate("myborrows")}>
                   📖 Sách đang mượn
@@ -57,15 +70,21 @@ export default function Layout({ children, onNavigate }) {
             </nav>
           </div>
 
-          {/* Right: Avatar */}
+          {/* Right: Avatar dropdown */}
           <div className="position-relative" ref={menuRef}>
-            <button
-              className="btn btn-light rounded-circle"
-              style={{ width: 40, height: 40 }}
+            <img
+              src={avatar}
+              alt="avatar"
+              className="rounded-circle"
+              style={{
+                width: 40,
+                height: 40,
+                cursor: "pointer",
+                objectFit: "cover",
+                border: "1px solid #ccc"
+              }}
               onClick={() => setShowMenu(!showMenu)}
-            >
-              👤
-            </button>
+            />
 
             {showMenu && (
               <ul
