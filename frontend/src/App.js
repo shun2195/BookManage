@@ -10,6 +10,8 @@ import UserManager from "./UserManager";
 import BorrowManager from "./BorrowManager";
 import MyBorrowedBooks from "./MyBorrowedBooks";
 import ExploreBooks from "./ExploreBooks";
+import Moderation from "./Moderation";
+import SystemManager from "./SystemManager";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
@@ -26,6 +28,9 @@ function App() {
         {currentPage === "usermanager" && <UserManager />}
         {currentPage === "borrowmanager" && <BorrowManager />}
         {currentPage === "myborrows" && <MyBorrowedBooks />}
+        {currentPage === "moderation" && <Moderation />}
+        {currentPage === "system" && <SystemManager />}
+
       </Layout>
     );
   }
