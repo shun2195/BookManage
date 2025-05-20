@@ -14,7 +14,6 @@ export default function Layout({ children, onNavigate }) {
     window.location.reload();
   };
 
-  // Đóng menu khi click ra ngoài
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -30,11 +29,20 @@ export default function Layout({ children, onNavigate }) {
       {/* ===== Header ===== */}
       <header className="bg-primary text-white py-3">
         <div className="container d-flex justify-content-between align-items-center">
-          <h3 className="m-0">
-            📚 <span className="fw-bold">Quản lý sách</span>
-          </h3>
+          {/* Left: Logo + Navigation */}
+          <div className="d-flex align-items-center gap-4">
+            <h4 className="m-0 fw-bold">📚 Quản lý sách</h4>
+            <nav className="d-flex gap-3">
+              <span style={{ cursor: "pointer" }} onClick={() => onNavigate("books")}>
+                📘 Quản lý sách
+              </span>
+              <span style={{ cursor: "pointer" }} onClick={() => onNavigate("stats")}>
+                📊 Thống kê
+              </span>
+            </nav>
+          </div>
 
-          {/* Avatar menu */}
+          {/* Right: Avatar */}
           <div className="position-relative" ref={menuRef}>
             <button
               className="btn btn-light rounded-circle"
@@ -67,32 +75,11 @@ export default function Layout({ children, onNavigate }) {
                   style={{ cursor: "pointer" }}
                   onClick={() => {
                     setShowMenu(false);
-                    onNavigate("books");
-                  }}
-                >
-                  📚 Quản lý sách
-                </li>
-                <li
-                  className="px-3 py-2 border-bottom"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => {
-                    setShowMenu(false);
-                    onNavigate("stats");
-                  }}
-                >
-                  📊 Thống kê
-                </li>
-                <li
-                  className="px-3 py-2 border-bottom"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => {
-                    setShowMenu(false);
                     onNavigate("changepw");
                   }}
                 >
                   🔐 Đổi mật khẩu
                 </li>
-
                 <li
                   className="px-3 py-2"
                   style={{ cursor: "pointer" }}

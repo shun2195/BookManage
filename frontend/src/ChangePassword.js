@@ -13,6 +13,7 @@ function ChangePassword() {
   });
 
   const email = localStorage.getItem("email");
+  const token = localStorage.getItem("token"); // lấy token nếu cần xác thực
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -27,16 +28,26 @@ function ChangePassword() {
     }
 
     try {
-      await axios.post(`${API}/change-password`, {
-        email,
-        currentPassword: form.currentPassword,
-        newPassword: form.newPassword,
-      });
+      await axios.post(
+        `${API}/change-password`,
+        {
+          email,
+          currentPassword: form.currentPassword,
+          newPassword: form.newPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // nếu backend cần token
+          },
+        }
+      );
 
       toast.success("✅ Đổi mật khẩu thành công!");
       setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (error) {
-      toast.error("❌ Đổi mật khẩu thất bại. Kiểm tra lại mật khẩu cũ.");
+      toast.error(
+        `❌ Đổi mật khẩu thất bại: ${error.response?.data?.message || error.message}`
+      );
     }
   };
 
@@ -71,7 +82,9 @@ function ChangePassword() {
           onChange={handleChange}
           required
         />
-        <button type="submit" className="btn btn-warning w-100">Cập nhật mật khẩu</button>
+        <button type="submit" className="btn btn-warning w-100">
+          Cập nhật mật khẩu
+        </button>
       </form>
       <ToastContainer />
     </div>

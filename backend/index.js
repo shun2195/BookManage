@@ -102,5 +102,22 @@ app.post("/login", async (req, res) => {
   });
 });
 
+// 🔁 Đổi mật khẩu
+app.post("/change-password", async (req, res) => {
+  const { email, currentPassword, newPassword } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ message: "Không tìm thấy người dùng" });
+
+  const isMatch = await bcrypt.compare(currentPassword, user.password);
+  if (!isMatch) return res.status(401).json({ message: "Mật khẩu hiện tại không đúng" });
+
+  const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+  user.password = hashedNewPassword;
+  await user.save();
+
+  res.json({ message: "Đổi mật khẩu thành công" });
+});
+
 // ✅ Khởi động server
 app.listen(5000, () => console.log("✅ Backend running at http://localhost:5000"));

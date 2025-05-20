@@ -3,7 +3,7 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// 🔗 Sử dụng API thật trên Render
+// 🔗 API backend đang dùng
 const API = "https://bookmanage-backend-ywce.onrender.com";
 
 function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
@@ -12,17 +12,26 @@ function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
+    if (!email || !password) {
+      toast.error("❌ Vui lòng nhập đầy đủ email và mật khẩu.");
+      return;
+    }
+
     try {
       const res = await axios.post(`${API}/login`, { email, password });
+
+      // Lưu thông tin người dùng
       localStorage.setItem("token", res.data.token);
-      localStorage.setItem("role", res.data.role); // Lưu vai trò
+      localStorage.setItem("role", res.data.role);
       localStorage.setItem("name", res.data.name);
-      localStorage.setItem("email", email); // vì gửi email đăng nhập
+      localStorage.setItem("email", email); // dùng lại trong các chức năng khác
+
       toast.success("✅ Đăng nhập thành công!");
-      onLoginSuccess();
+      onLoginSuccess(); // callback để chuyển trang hoặc load lại app
 
     } catch (err) {
-      toast.error("❌ Sai tài khoản hoặc mật khẩu");
+      toast.error("❌ Sai tài khoản hoặc mật khẩu.");
     }
   };
 
@@ -50,11 +59,18 @@ function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
             required
           />
         </div>
-        <button type="submit" className="btn btn-primary w-100">Đăng nhập</button>
+        <button type="submit" className="btn btn-primary w-100">
+          Đăng nhập
+        </button>
+
         <div className="text-center mt-3">
-            <button type="button" className="btn btn-link" onClick={onSwitchToRegister}>
-                📝 Chưa có tài khoản? Đăng ký
-            </button>
+          <button
+            type="button"
+            className="btn btn-link"
+            onClick={onSwitchToRegister}
+          >
+            📝 Chưa có tài khoản? Đăng ký
+          </button>
         </div>
       </form>
       <ToastContainer />
