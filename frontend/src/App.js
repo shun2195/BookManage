@@ -7,7 +7,8 @@ import Layout from "./components/Layout";
 import UserProfile from "./UserProfile";
 import ChangePassword from "./ChangePassword";
 import UserManager from "./UserManager";
-
+import BorrowManager from "./BorrowManager";
+import MyBorrowedBooks from "./MyBorrowedBooks";
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
   const [isRegistering, setIsRegistering] = useState(false);
@@ -21,6 +22,8 @@ function App() {
         {currentPage === "stats" && <BookStats />}
         {currentPage === "changepassword" && <ChangePassword />}
         {currentPage === "usermanager" && <UserManager />}
+        {currentPage === "borrowmanager" && <BorrowManager />}
+        {currentPage === "myborrows" && <MyBorrowedBooks />}
       </Layout>
 
     );

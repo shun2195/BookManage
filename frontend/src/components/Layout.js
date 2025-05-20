@@ -40,8 +40,18 @@ export default function Layout({ children, onNavigate }) {
                 📊 Thống kê
               </span>
               {role === "admin" && (
-                <span style={{ cursor: "pointer" }} onClick={() => onNavigate("usermanager")}>
-                  👥 Quản lý người dùng
+                <>
+                  <span style={{ cursor: "pointer" }} onClick={() => onNavigate("usermanager")}>
+                    👥 Người dùng
+                  </span>
+                  <span style={{ cursor: "pointer" }} onClick={() => onNavigate("borrowmanager")}>
+                    📋 Mượn – Trả sách
+                  </span>
+                </>
+              )}
+              {role === "user" && (
+                <span style={{ cursor: "pointer" }} onClick={() => onNavigate("myborrows")}>
+                  📖 Sách đang mượn
                 </span>
               )}
             </nav>
@@ -77,14 +87,14 @@ export default function Layout({ children, onNavigate }) {
                 </li>
                 {role === "admin" && (
                   <li
-                  className="px-3 py-2 border-bottom"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => {
-                    setShowMenu(false);
-                    onNavigate("usermanager");
-                  }}
+                    className="px-3 py-2 border-bottom"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      setShowMenu(false);
+                      onNavigate("usermanager");
+                    }}
                   >
-                  👥 Quản lý người dùng
+                    👥 Quản lý người dùng
                   </li>
                 )}
                 <li
