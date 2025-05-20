@@ -47,6 +47,8 @@ function BorrowManager() {
             <th>Sách</th>
             <th>Ngày mượn</th>
             <th>Ngày trả</th>
+            <th>Người đánh dấu</th>
+            <th>Ngày đánh dấu</th>
             <th>Trạng thái</th>
             <th>Thao tác</th>
           </tr>
@@ -54,12 +56,14 @@ function BorrowManager() {
         <tbody>
           {records.map((r) => (
             <tr key={r._id}>
-              <td>{r.userId?.name} <br /> <small className="text-muted">{r.userId?.email}</small></td>
+              <td>{r.userId?.name}<br /><small className="text-muted">{r.userId?.email}</small></td>
               <td>{r.bookId?.title}</td>
               <td>{new Date(r.borrowDate).toLocaleDateString("vi-VN")}</td>
               <td>{r.returnDate ? new Date(r.returnDate).toLocaleDateString("vi-VN") : "—"}</td>
+              <td>{r.returnedBy?.name || "—"}</td>
+              <td>{r.returnedAt ? new Date(r.returnedAt).toLocaleDateString("vi-VN") : "—"}</td>
               <td>
-                <span className={`badge bg-${r.status === "Đã trả" ? "success" : "warning text-dark"}`}>
+                <span className={`badge bg-${r.status === "Đã trả" ? "success" : r.status === "Quá hạn" ? "danger" : "warning text-dark"}`}>
                   {r.status}
                 </span>
               </td>

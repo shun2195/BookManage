@@ -35,7 +35,13 @@ const BorrowRecord = mongoose.model("BorrowRecord", new mongoose.Schema({
   bookId: { type: mongoose.Schema.Types.ObjectId, ref: "Book" },
   borrowDate: { type: Date, default: Date.now },
   returnDate: Date,
-  status: { type: String, enum: ["Đang mượn", "Đã trả"], default: "Đang mượn" }
+  returnedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // admin hoặc người dùng tự đánh dấu
+  returnedAt: Date,
+  status: {
+    type: String,
+    enum: ["Đang mượn", "Đã trả", "Quá hạn"],
+    default: "Đang mượn"
+  }
 }));
 
 // ======= Tạo admin và mod nếu chưa có =======
@@ -144,9 +150,17 @@ app.put("/return/:id", authMiddleware, async (req, res) => {
 
 //  👁️ Admin xem tất cả danh sách mượn trả
 app.get("/borrows", authMiddleware, isAdmin, async (req, res) => {
-  const records = await BorrowRecord.find()
+  const { userId, bookId } = req.query;
+  const query = {};
+  if (userId) query.userId = userId;
+  if (bookId) query.bookId = bookId;
+
+  const records = await BorrowRecord.find(query)
     .populate("userId", "name email")
-    .populate("bookId", "title author");
+    .populate("bookId", "title")
+    .populate("returnedBy", "name")
+    .sort({ borrowDate: -1 });
+
   res.json(records);
 });
 
