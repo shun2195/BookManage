@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 const API = "https://bookmanage-backend-ywce.onrender.com";
+const BOOKS_PER_PAGE = 9;
 
 function ExploreBooks() {
   const [books, setBooks] = useState([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     axios.get(`${API}/books`)
@@ -17,6 +19,17 @@ function ExploreBooks() {
   const filtered = books.filter(book =>
     book.title.toLowerCase().includes(search.toLowerCase()) &&
     (!filter || book.category === filter)
+  );
+
+  // Reset về trang đầu khi tìm kiếm hoặc lọc
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filter]);
+
+  const totalPages = Math.ceil(filtered.length / BOOKS_PER_PAGE);
+  const paginated = filtered.slice(
+    (currentPage - 1) * BOOKS_PER_PAGE,
+    currentPage * BOOKS_PER_PAGE
   );
 
   const categories = [...new Set(books.map(b => b.category))];
@@ -52,7 +65,7 @@ function ExploreBooks() {
 
       {/* Hiển thị sách */}
       <div className="row">
-        {filtered.map((book) => (
+        {paginated.map((book) => (
           <div className="col-md-4 mb-4" key={book._id}>
             <div className="card h-100 shadow-sm">
               <div className="card-body">
@@ -68,6 +81,24 @@ function ExploreBooks() {
         ))}
         {filtered.length === 0 && <p className="text-muted">Không tìm thấy sách phù hợp.</p>}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <nav className="d-flex justify-content-center mt-3">
+          <ul className="pagination">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <li
+                key={i}
+                className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
+                style={{ cursor: "pointer" }}
+                onClick={() => setCurrentPage(i + 1)}
+              >
+                <span className="page-link">{i + 1}</span>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
     </div>
   );
 }
