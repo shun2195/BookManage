@@ -18,38 +18,43 @@ function App() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [currentPage, setCurrentPage] = useState("books");
 
-  if (isLoggedIn) {
-    return (
-      <Layout onNavigate={setCurrentPage}>
-        {currentPage === "books" && <BookManager />}
-        {currentPage === "profile" && <UserProfile />}
-        {currentPage === "stats" && <BookStats />}
-        {currentPage === "changepassword" && <ChangePassword />}
-        {currentPage === "usermanager" && <UserManager />}
-        {currentPage === "borrowmanager" && <BorrowManager />}
-        {currentPage === "myborrows" && <MyBorrowedBooks />}
-        {currentPage === "moderation" && <Moderation />}
-        {currentPage === "system" && <SystemManager />}
-
-      </Layout>
-    );
-  }
+  const handleLoginSuccess = () => {
+    setIsLoggedIn(true);
+    setCurrentPage("books");
+  };
 
   return (
-    <>
-      <ExploreBooks />
-      {isRegistering ? (
-        <RegisterForm onSwitchToLogin={() => setIsRegistering(false)} />
+    <Layout
+      onNavigate={setCurrentPage}
+      onLogin={() => setIsRegistering(false)}
+      onRegister={() => setIsRegistering(true)}
+    >
+      {isLoggedIn ? (
+        <>
+          {currentPage === "books" && <BookManager />}
+          {currentPage === "profile" && <UserProfile />}
+          {currentPage === "stats" && <BookStats />}
+          {currentPage === "changepassword" && <ChangePassword />}
+          {currentPage === "usermanager" && <UserManager />}
+          {currentPage === "borrowmanager" && <BorrowManager />}
+          {currentPage === "myborrows" && <MyBorrowedBooks />}
+          {currentPage === "moderation" && <Moderation />}
+          {currentPage === "system" && <SystemManager />}
+        </>
       ) : (
-        <LoginForm
-          onLoginSuccess={() => {
-            setIsLoggedIn(true);
-            setCurrentPage("books");
-          }}
-          onSwitchToRegister={() => setIsRegistering(true)}
-        />
+        <>
+          <ExploreBooks />
+          {isRegistering ? (
+            <RegisterForm onSwitchToLogin={() => setIsRegistering(false)} />
+          ) : (
+            <LoginForm
+              onLoginSuccess={handleLoginSuccess}
+              onSwitchToRegister={() => setIsRegistering(true)}
+            />
+          )}
+        </>
       )}
-    </>
+    </Layout>
   );
 }
 

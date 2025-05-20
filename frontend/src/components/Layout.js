@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 
-export default function Layout({ children, onNavigate }) {
+export default function Layout({ children, onNavigate, onLogin, onRegister }) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef();
+  const isLoggedIn = !!localStorage.getItem("token");
 
   const role = localStorage.getItem("role");
   const name = localStorage.getItem("name") || "User";
@@ -70,72 +71,72 @@ export default function Layout({ children, onNavigate }) {
             </nav>
           </div>
 
-          {/* Right: Avatar dropdown */}
+          {/* Right: Avatar hoặc nút login/register */}
           <div className="position-relative" ref={menuRef}>
-            <img
-              src={avatar}
-              alt="avatar"
-              className="rounded-circle"
-              style={{
-                width: 40,
-                height: 40,
-                cursor: "pointer",
-                objectFit: "cover",
-                border: "1px solid #ccc"
-              }}
-              onClick={() => setShowMenu(!showMenu)}
-            />
-
-            {showMenu && (
-              <ul
-                className="position-absolute end-0 mt-2 bg-white border rounded shadow-sm text-dark"
-                style={{ listStyle: "none", minWidth: "180px", zIndex: 999 }}
-              >
-                <li className="px-3 py-2 border-bottom text-muted">
-                  Vai trò: <strong>{role || "?"}</strong>
-                </li>
-                <li
-                  className="px-3 py-2 border-bottom"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => {
-                    setShowMenu(false);
-                    onNavigate("profile");
+            {isLoggedIn ? (
+              <>
+                <img
+                  src={avatar}
+                  alt="avatar"
+                  className="rounded-circle"
+                  style={{
+                    width: 40,
+                    height: 40,
+                    cursor: "pointer",
+                    objectFit: "cover",
+                    border: "1px solid #ccc"
                   }}
-                >
-                  👤 Trang cá nhân
-                </li>
-                {role === "admin" && (
-                  <li
-                    className="px-3 py-2 border-bottom"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      setShowMenu(false);
-                      onNavigate("usermanager");
+                  onClick={() => setShowMenu(!showMenu)}
+                />
+
+                {showMenu && (
+                  <ul
+                    className="position-absolute end-0 mt-2 bg-white border rounded shadow-sm text-dark"
+                    style={{
+                      listStyle: "none",
+                      minWidth: "220px",
+                      zIndex: 999,
+                      fontSize: "15px",
+                      padding: "5px 0"
                     }}
                   >
-                    👥 Quản lý người dùng
-                  </li>
+                    <li className="px-3 py-2 border-bottom text-muted">
+                      Vai trò: <strong>{role || "?"}</strong>
+                    </li>
+                    <li className="px-3 py-2 border-bottom" style={{ cursor: "pointer" }} onClick={() => {
+                      setShowMenu(false);
+                      onNavigate("profile");
+                    }}>
+                      👤 Trang cá nhân
+                    </li>
+                    {role === "admin" && (
+                      <li className="px-3 py-2 border-bottom" style={{ cursor: "pointer" }} onClick={() => {
+                        setShowMenu(false);
+                        onNavigate("usermanager");
+                      }}>
+                        👥 Quản lý người dùng
+                      </li>
+                    )}
+                    <li className="px-3 py-2 border-bottom" style={{ cursor: "pointer" }} onClick={() => {
+                      setShowMenu(false);
+                      onNavigate("changepassword");
+                    }}>
+                      🔐 Đổi mật khẩu
+                    </li>
+                    <li className="px-3 py-2" style={{ cursor: "pointer" }} onClick={handleLogout}>
+                      🚪 Đăng xuất
+                    </li>
+                  </ul>
                 )}
-                <li
-                  className="px-3 py-2 border-bottom"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => {
-                    setShowMenu(false);
-                    onNavigate("changepassword");
-                  }}
-                >
-                  🔐 Đổi mật khẩu
-                </li>
-                <li
-                  className="px-3 py-2"
-                  style={{ cursor: "pointer" }}
-                  onClick={handleLogout}
-                >
-                  🚪 Đăng xuất
-                </li>
-              </ul>
+              </>
+            ) : (
+              <>
+                <button className="btn btn-outline-light me-2" onClick={onLogin}>Đăng nhập</button>
+                <button className="btn btn-warning text-dark" onClick={onRegister}>Đăng ký</button>
+              </>
             )}
           </div>
+
         </div>
       </header>
 
