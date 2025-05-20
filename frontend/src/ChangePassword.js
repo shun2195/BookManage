@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -13,7 +13,11 @@ function ChangePassword() {
   });
 
   const email = localStorage.getItem("email");
-  const token = localStorage.getItem("token"); // lấy token nếu cần xác thực
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    console.log("🧪 Component ChangePassword đã được render");
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -21,6 +25,11 @@ function ChangePassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!email || !token) {
+      toast.error("⚠️ Bạn chưa đăng nhập.");
+      return;
+    }
 
     if (form.newPassword !== form.confirmPassword) {
       toast.error("❌ Mật khẩu mới không khớp.");
@@ -37,7 +46,7 @@ function ChangePassword() {
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`, // nếu backend cần token
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -46,7 +55,9 @@ function ChangePassword() {
       setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (error) {
       toast.error(
-        `❌ Đổi mật khẩu thất bại: ${error.response?.data?.message || error.message}`
+        `❌ Đổi mật khẩu thất bại: ${
+          error.response?.data?.message || error.message
+        }`
       );
     }
   };

@@ -18,6 +18,7 @@ function App() {
         {currentPage === "books" && <BookManager />}
         {currentPage === "profile" && <UserProfile />}
         {currentPage === "stats" && <BookStats />}
+        {currentPage === "changepassword" && <ChangePassword />}
       </Layout>
 
     );

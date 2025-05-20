@@ -75,7 +75,7 @@ export default function Layout({ children, onNavigate }) {
                   style={{ cursor: "pointer" }}
                   onClick={() => {
                     setShowMenu(false);
-                    onNavigate("changepw");
+                    onNavigate("changepassword");
                   }}
                 >
                   🔐 Đổi mật khẩu
