@@ -18,6 +18,7 @@ function BookManager() {
   const booksPerPage = 5;
 
   const role = localStorage.getItem("role");
+  const token = localStorage.getItem("token");
 
   const loadBooks = async () => {
     try {
@@ -40,11 +41,15 @@ function BookManager() {
     e.preventDefault();
     try {
       if (editingId) {
-        await axios.put(`${API}/books/${editingId}`, form);
+        await axios.put(`${API}/books/${editingId}`, form, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         toast.success("📘 Cập nhật thành công!");
         setEditingId(null);
       } else {
-        await axios.post(`${API}/books`, form);
+        await axios.post(`${API}/books`, form, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         toast.success("📗 Thêm sách mới thành công!");
       }
       setForm({ title: "", author: "", year: "", category: "" });
@@ -61,11 +66,8 @@ function BookManager() {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc chắn muốn xoá sách này?")) return;
-
-    const token = localStorage.getItem("token");
-
     try {
-      await axios.delete(`https://bookmanage-backend-ywce.onrender.com/books/${id}`, {
+      await axios.delete(`${API}/books/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -76,7 +78,6 @@ function BookManager() {
       toast.error("❌ Xoá thất bại!");
     }
   };
-
 
   const uniqueCategories = [...new Set(books.map((book) => book.category))];
 
@@ -112,24 +113,28 @@ function BookManager() {
     <div className="container mt-5">
       <h2 className="mb-4 text-primary">📚 Quản lý sách</h2>
 
-      <form onSubmit={handleSubmit} className="row g-3 mb-4">
-        <div className="col-md-3">
-          <input name="title" className="form-control" placeholder="Tiêu đề" value={form.title} onChange={handleChange} required />
-        </div>
-        <div className="col-md-3">
-          <input name="author" className="form-control" placeholder="Tác giả" value={form.author} onChange={handleChange} required />
-        </div>
-        <div className="col-md-2">
-          <input name="year" className="form-control" placeholder="Năm" value={form.year} onChange={handleChange} required />
-        </div>
-        <div className="col-md-2">
-          <input name="category" className="form-control" placeholder="Thể loại" value={form.category} onChange={handleChange} required />
-        </div>
-        <div className="col-md-2">
-          <button className="btn btn-success w-100">{editingId ? "Cập nhật" : "Thêm"}</button>
-        </div>
-      </form>
+      {/* Form thêm/sửa — chỉ admin */}
+      {role === "admin" && (
+        <form onSubmit={handleSubmit} className="row g-3 mb-4">
+          <div className="col-md-3">
+            <input name="title" className="form-control" placeholder="Tiêu đề" value={form.title} onChange={handleChange} required />
+          </div>
+          <div className="col-md-3">
+            <input name="author" className="form-control" placeholder="Tác giả" value={form.author} onChange={handleChange} required />
+          </div>
+          <div className="col-md-2">
+            <input name="year" className="form-control" placeholder="Năm" value={form.year} onChange={handleChange} required />
+          </div>
+          <div className="col-md-2">
+            <input name="category" className="form-control" placeholder="Thể loại" value={form.category} onChange={handleChange} required />
+          </div>
+          <div className="col-md-2">
+            <button className="btn btn-success w-100">{editingId ? "Cập nhật" : "Thêm"}</button>
+          </div>
+        </form>
+      )}
 
+      {/* Bộ lọc và tìm kiếm */}
       <div className="row mb-3">
         <div className="col-md-4 mb-2">
           <input
@@ -165,6 +170,7 @@ function BookManager() {
         </div>
       </div>
 
+      {/* Danh sách sách */}
       <table className="table table-striped table-bordered">
         <thead className="table-dark">
           <tr>
