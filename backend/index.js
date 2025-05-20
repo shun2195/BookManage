@@ -30,6 +30,14 @@ const User = mongoose.model("User", new mongoose.Schema({
   isLocked: { type: Boolean, default: false }
 }));
 
+const BorrowRecord = mongoose.model("BorrowRecord", new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  bookId: { type: mongoose.Schema.Types.ObjectId, ref: "Book" },
+  borrowDate: { type: Date, default: Date.now },
+  returnDate: Date,
+  status: { type: String, enum: ["Đang mượn", "Đã trả"], default: "Đang mượn" }
+}));
+
 // ======= Tạo admin và mod nếu chưa có =======
 (async () => {
   const usersToCreate = [
@@ -78,12 +86,12 @@ const isModOrAdmin = async (req, res, next) => {
 
 // ======= API =======
 
+// ========📚 API sách=========
 // 📚 Lấy danh sách sách (ai cũng xem được)
 app.get("/books", async (req, res) => {
   const books = await Book.find();
   res.json(books);
 });
-
 // ➕ Thêm sách mới — chỉ admin
 app.post("/books", authMiddleware, isAdmin, async (req, res) => {
   const book = new Book(req.body);
@@ -97,12 +105,68 @@ app.delete("/books/:id", authMiddleware, isAdmin, async (req, res) => {
   res.json({ message: "Đã xoá sách" });
 });
 
-// 🔒 Khoá / mở khoá người dùng
+// ========🔁 API mượn - trả==========
+// ➕ Người dùng mượn sách:
+app.post("/borrow", authMiddleware, async (req, res) => {
+  const { bookId } = req.body;
+
+  const alreadyBorrowed = await BorrowRecord.findOne({
+    userId: req.user.userId,
+    bookId,
+    status: "Đang mượn"
+  });
+
+  if (alreadyBorrowed) {
+    return res.status(400).json({ message: "Bạn đã mượn sách này và chưa trả." });
+  }
+
+  const newRecord = new BorrowRecord({
+    userId: req.user.userId,
+    bookId
+  });
+
+  await newRecord.save();
+  res.json({ message: "Đã mượn sách thành công" });
+});
+
+
+// Trả sách
+app.put("/return/:id", authMiddleware, async (req, res) => {
+  const record = await BorrowRecord.findById(req.params.id);
+  if (!record) return res.status(404).json({ message: "Không tìm thấy bản ghi" });
+
+  record.status = "Đã trả";
+  record.returnDate = new Date();
+  await record.save();
+
+  res.json({ message: "Đã trả sách thành công" });
+});
+
+//  👁️ Admin xem tất cả danh sách mượn trả
+app.get("/borrows", authMiddleware, isAdmin, async (req, res) => {
+  const records = await BorrowRecord.find()
+    .populate("userId", "name email")
+    .populate("bookId", "title author");
+  res.json(records);
+});
+
+//👤 Người dùng xem lịch sử của mình:
+app.get("/my-borrows", authMiddleware, async (req, res) => {
+  const records = await BorrowRecord.find({ userId: req.user.userId })
+    .populate("bookId", "title author");
+  res.json(records);
+});
+
+
+
+// 🔒 Khoá / mở khoá người dùng - chỉ admin
 app.put("/users/:id/lock", authMiddleware, isAdmin, async (req, res) => {
   const { isLocked } = req.body;
   await User.findByIdAndUpdate(req.params.id, { isLocked });
   res.json({ message: isLocked ? "Đã khóa tài khoản" : "Đã mở khóa tài khoản" });
 });
+
+
 
 // 🟢 Đăng ký
 app.post("/register", async (req, res) => {
