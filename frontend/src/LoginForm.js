@@ -31,7 +31,15 @@ function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
       onLoginSuccess(); // callback để chuyển trang hoặc load lại app
 
     } catch (err) {
-      toast.error("❌ Sai tài khoản hoặc mật khẩu.");
+      const msg = err.response?.data?.message;
+
+      if (msg === "Tài khoản đã bị khóa") {
+        toast.error("🔒 Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.");
+      } else if (msg === "Sai mật khẩu" || msg === "Tài khoản không tồn tại") {
+        toast.error("❌ Sai tài khoản hoặc mật khẩu.");
+      } else {
+        toast.error("❌ Đăng nhập thất bại. Vui lòng thử lại sau.");
+      }
     }
   };
 
