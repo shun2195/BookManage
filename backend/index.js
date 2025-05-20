@@ -282,6 +282,37 @@ app.post("/users/upload-avatar", authMiddleware, upload.single("avatar"), async 
   await User.findByIdAndUpdate(req.user.userId, { avatarUrl: url });
   res.json({ avatarUrl: url });
 });
+//API tổng số sách đang được mượn
+app.get("/stats/borrowed-count", authMiddleware, isAdmin, async (req, res) => {
+  const count = await BorrowRecord.countDocuments({ status: "Đang mượn" });
+  res.json({ totalBorrowed: count });
+});
+//API top sách được mượn nhiều nhất
+app.get("/stats/top-borrowed", authMiddleware, isAdmin, async (req, res) => {
+  const top = await BorrowRecord.aggregate([
+    { $group: { _id: "$bookId", count: { $sum: 1 } } },
+    { $sort: { count: -1 } },
+    { $limit: 5 },
+    {
+      $lookup: {
+        from: "books",
+        localField: "_id",
+        foreignField: "_id",
+        as: "book"
+      }
+    },
+    { $unwind: "$book" },
+    {
+      $project: {
+        _id: 0,
+        title: "$book.title",
+        author: "$book.author",
+        count: 1
+      }
+    }
+  ]);
+  res.json(top);
+});
 
 // ✅ Khởi động server
 app.listen(5000, () => console.log("✅ Backend running at http://localhost:5000"));
