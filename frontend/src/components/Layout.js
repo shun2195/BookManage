@@ -39,6 +39,11 @@ export default function Layout({ children, onNavigate }) {
               <span style={{ cursor: "pointer" }} onClick={() => onNavigate("stats")}>
                 📊 Thống kê
               </span>
+              {role === "admin" && (
+                <span style={{ cursor: "pointer" }} onClick={() => onNavigate("usermanager")}>
+                  👥 Người dùng
+                </span>
+              )}
             </nav>
           </div>
 

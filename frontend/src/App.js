@@ -6,6 +6,7 @@ import BookStats from "./BookStats";
 import Layout from "./components/Layout";
 import UserProfile from "./UserProfile";
 import ChangePassword from "./ChangePassword";
+import UserManager from "./UserManager";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
@@ -19,6 +20,7 @@ function App() {
         {currentPage === "profile" && <UserProfile />}
         {currentPage === "stats" && <BookStats />}
         {currentPage === "changepassword" && <ChangePassword />}
+        {currentPage === "usermanager" && <UserManager />}
       </Layout>
 
     );

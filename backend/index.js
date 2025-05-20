@@ -26,24 +26,25 @@ const User = mongoose.model("User", new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
   password: String,
-  role: { type: String, default: "user" }
+  role: { type: String, default: "user" },
+  isLocked: { type: Boolean, default: false }
 }));
 
-// ======= Tạo admin nếu chưa có =======
+
+// ======= Tạo admin và mod nếu chưa có =======
 (async () => {
-  const adminEmail = "admin@example.com";
-  const exists = await User.findOne({ email: adminEmail });
-  if (!exists) {
-    const hashed = await bcrypt.hash("admin123", 10);
-    await User.create({
-      name: "Admin Quản trị",
-      email: adminEmail,
-      password: hashed,
-      role: "admin"
-    });
-    console.log("✅ Đã tạo tài khoản admin: admin@example.com / admin123");
-  } else {
-    console.log("ℹ️ Admin đã tồn tại.");
+  const usersToCreate = [
+    { email: "admin@example.com", password: "admin123", name: "Admin", role: "admin" },
+    { email: "mod@example.com", password: "mod123", name: "Mod Kiểm duyệt", role: "mod" },
+  ];
+
+  for (const user of usersToCreate) {
+    const exists = await User.findOne({ email: user.email });
+    if (!exists) {
+      const hashed = await bcrypt.hash(user.password, 10);
+      await User.create({ ...user, password: hashed });
+      console.log(`✅ Đã tạo: ${user.email} / ${user.password}`);
+    }
   }
 })();
 
@@ -62,6 +63,20 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
+const isAdmin = async (req, res, next) => {
+  const user = await User.findById(req.user.userId);
+  if (user.role !== "admin") {
+    return res.status(403).json({ message: "Chỉ admin mới được thực hiện chức năng này" });
+  }
+  next();
+};
+
+const isModOrAdmin = async (req, res, next) => {
+  const user = await User.findById(req.user.userId);
+  if (user.role === "admin" || user.role === "mod") return next();
+  return res.status(403).json({ message: "Chỉ mod hoặc admin mới có quyền" });
+};
+
 // ======= API =======
 
 // 📚 Lấy danh sách sách (ai cũng xem được)
@@ -71,27 +86,25 @@ app.get("/books", async (req, res) => {
 });
 
 // ➕ Thêm sách mới — chỉ admin
-app.post("/books", authMiddleware, async (req, res) => {
-  const user = await User.findById(req.user.userId);
-  if (user.role !== "admin") {
-    return res.status(403).json({ message: "Bạn không có quyền thêm sách" });
-  }
-
+app.post("/books", authMiddleware, isAdmin, async (req, res) => {
   const book = new Book(req.body);
   await book.save();
   res.json(book);
 });
 
 // ❌ Xoá sách — chỉ admin
-app.delete("/books/:id", authMiddleware, async (req, res) => {
-  const user = await User.findById(req.user.userId);
-  if (user.role !== "admin") {
-    return res.status(403).json({ message: "Bạn không có quyền xoá sách" });
-  }
-
+app.delete("/books/:id", authMiddleware, isAdmin, async (req, res) => {
   await Book.findByIdAndDelete(req.params.id);
   res.json({ message: "Đã xoá sách" });
 });
+
+// Khóa/ Mở tài khoản - chỉ admin
+app.put("/users/:id/lock", authMiddleware, isAdmin, async (req, res) => {
+  const { isLocked } = req.body;
+  await User.findByIdAndUpdate(req.params.id, { isLocked });
+  res.json({ message: isLocked ? "Đã khóa tài khoản" : "Đã mở khóa tài khoản" });
+});
+
 
 // 🟢 Đăng ký
 app.post("/register", async (req, res) => {
@@ -148,6 +161,23 @@ app.post("/change-password", async (req, res) => {
   await user.save();
 
   res.json({ message: "Đổi mật khẩu thành công" });
+});
+
+// 👥 Danh sách người dùng (chỉ admin)
+app.get("/users", authMiddleware, isAdmin, async (req, res) => {
+  const users = await User.find().select("-password");
+  res.json(users);
+});
+
+// 👤 Admin cập nhật vai trò người dùng
+app.put("/users/:id/role", authMiddleware, isAdmin, async (req, res) => {
+  const { role } = req.body;
+  if (!["admin", "mod", "user"].includes(role)) {
+    return res.status(400).json({ message: "Vai trò không hợp lệ" });
+  }
+
+  await User.findByIdAndUpdate(req.params.id, { role });
+  res.json({ message: "Đã cập nhật vai trò người dùng" });
 });
 
 // ✅ Khởi động server
