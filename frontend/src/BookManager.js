@@ -15,7 +15,7 @@ function BookManager() {
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const booksPerPage = 5;
+  const booksPerPage = 10;
 
   const role = localStorage.getItem("role");
   const token = localStorage.getItem("token");
@@ -28,9 +28,21 @@ function BookManager() {
       toast.error("❌ Không thể tải danh sách sách");
     }
   };
+  const loadBorrowedBooks = async () => {
+    try {
+      const res = await axios.get(`${API}/my-borrows`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const ids = res.data
+        .filter(b => b.status === "Đang mượn")
+        .map(b => b.bookId._id);
+      setBorrowedIds(ids);
+    } catch {}
+  };
 
   useEffect(() => {
     loadBooks();
+    if (role === "user") loadBorrowedBooks();
   }, []);
 
   const handleChange = (e) => {
@@ -76,6 +88,18 @@ function BookManager() {
       loadBooks();
     } catch (error) {
       toast.error("❌ Xoá thất bại!");
+    }
+  };
+  const handleBorrow = async (bookId) => {
+    try {
+      await axios.post(`${API}/borrow`, { bookId }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success("✅ Mượn sách thành công");
+      loadBorrowedBooks();
+    } catch (err) {
+      const msg = err.response?.data?.message || "Thao tác thất bại";
+      toast.error(`❌ ${msg}`);
     }
   };
 
@@ -192,6 +216,15 @@ function BookManager() {
                 <button className="btn btn-primary btn-sm me-2" onClick={() => handleEdit(book)}>Sửa</button>
                 {role === "admin" && (
                   <button className="btn btn-danger btn-sm" onClick={() => handleDelete(book._id)}>Xoá</button>
+                )}
+                {role === "user" && (
+                  <button
+                    className="btn btn-sm btn-outline-primary"
+                    disabled={borrowedIds.includes(book._id)}
+                    onClick={() => handleBorrow(book._id)}
+                  >
+                    {borrowedIds.includes(book._id) ? "Đã mượn" : "📥 Mượn"}
+                  </button>
                 )}
               </td>
             </tr>
