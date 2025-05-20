@@ -61,14 +61,22 @@ function BookManager() {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc chắn muốn xoá sách này?")) return;
+
+    const token = localStorage.getItem("token");
+
     try {
-      await axios.delete(`${API}/books/${id}`);
-      toast.info("🗑️ Đã xoá sách");
+      await axios.delete(`https://bookmanage-backend-ywce.onrender.com/books/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      toast.success("🗑️ Đã xoá sách");
       loadBooks();
     } catch (error) {
       toast.error("❌ Xoá thất bại!");
     }
   };
+
 
   const uniqueCategories = [...new Set(books.map((book) => book.category))];
 

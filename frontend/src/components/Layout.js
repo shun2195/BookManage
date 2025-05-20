@@ -31,7 +31,7 @@ export default function Layout({ children, onNavigate }) {
         <div className="container d-flex justify-content-between align-items-center">
           {/* Left: Logo + Navigation */}
           <div className="d-flex align-items-center gap-4">
-            <h4 className="m-0 fw-bold">📚 Quản lý sách</h4>
+            <h4 className="m-0 fw-bold">📚 NhungTruc</h4>
             <nav className="d-flex gap-3">
               <span style={{ cursor: "pointer" }} onClick={() => onNavigate("books")}>
                 📘 Quản lý sách

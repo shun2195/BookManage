@@ -6,7 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 const API = "https://bookmanage-backend-ywce.onrender.com";
 
 function RegisterForm({ onSwitchToLogin }) {
-  const [form, setForm] = useState({ email: "", password: "", name: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -15,6 +15,7 @@ function RegisterForm({ onSwitchToLogin }) {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
+      // Gửi dữ liệu đăng ký
       await axios.post(`${API}/register`, form);
       toast.success("✅ Đăng ký thành công! Mời bạn đăng nhập.");
       setTimeout(() => onSwitchToLogin(), 2000);
