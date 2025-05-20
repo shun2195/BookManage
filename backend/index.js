@@ -26,10 +26,9 @@ const User = mongoose.model("User", new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
   password: String,
-  role: { type: String, default: "user" },
+  role: { type: String, default: "user" }, // user, admin, mod, guest, superadmin
   isLocked: { type: Boolean, default: false }
 }));
-
 
 // ======= Tạo admin và mod nếu chưa có =======
 (async () => {
@@ -98,13 +97,12 @@ app.delete("/books/:id", authMiddleware, isAdmin, async (req, res) => {
   res.json({ message: "Đã xoá sách" });
 });
 
-// Khóa/ Mở tài khoản - chỉ admin
+// 🔒 Khoá / mở khoá người dùng
 app.put("/users/:id/lock", authMiddleware, isAdmin, async (req, res) => {
   const { isLocked } = req.body;
   await User.findByIdAndUpdate(req.params.id, { isLocked });
   res.json({ message: isLocked ? "Đã khóa tài khoản" : "Đã mở khóa tài khoản" });
 });
-
 
 // 🟢 Đăng ký
 app.post("/register", async (req, res) => {
@@ -127,12 +125,14 @@ app.post("/register", async (req, res) => {
   });
 });
 
-// 🔐 Đăng nhập
+// 🔐 Đăng nhập — kiểm tra isLocked
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email });
   if (!user) return res.status(401).json({ message: "Tài khoản không tồn tại" });
+
+  if (user.isLocked) return res.status(403).json({ message: "Tài khoản đã bị khóa" });
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) return res.status(401).json({ message: "Sai mật khẩu" });
@@ -172,7 +172,8 @@ app.get("/users", authMiddleware, isAdmin, async (req, res) => {
 // 👤 Admin cập nhật vai trò người dùng
 app.put("/users/:id/role", authMiddleware, isAdmin, async (req, res) => {
   const { role } = req.body;
-  if (!["admin", "mod", "user"].includes(role)) {
+  const validRoles = ["admin", "mod", "user", "guest", "superadmin"];
+  if (!validRoles.includes(role)) {
     return res.status(400).json({ message: "Vai trò không hợp lệ" });
   }
 

@@ -41,7 +41,7 @@ export default function Layout({ children, onNavigate }) {
               </span>
               {role === "admin" && (
                 <span style={{ cursor: "pointer" }} onClick={() => onNavigate("usermanager")}>
-                  👥 Người dùng
+                  👥 Quản lý người dùng
                 </span>
               )}
             </nav>
@@ -75,6 +75,18 @@ export default function Layout({ children, onNavigate }) {
                 >
                   👤 Trang cá nhân
                 </li>
+                {role === "admin" && (
+                  <li
+                  className="px-3 py-2 border-bottom"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {
+                    setShowMenu(false);
+                    onNavigate("usermanager");
+                  }}
+                  >
+                  👥 Quản lý người dùng
+                  </li>
+                )}
                 <li
                   className="px-3 py-2 border-bottom"
                   style={{ cursor: "pointer" }}
