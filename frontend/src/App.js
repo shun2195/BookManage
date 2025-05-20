@@ -9,11 +9,13 @@ import ChangePassword from "./ChangePassword";
 import UserManager from "./UserManager";
 import BorrowManager from "./BorrowManager";
 import MyBorrowedBooks from "./MyBorrowedBooks";
+import ExploreBooks from "./ExploreBooks";
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
   const [isRegistering, setIsRegistering] = useState(false);
   const [currentPage, setCurrentPage] = useState("books");
-  
+
   if (isLoggedIn) {
     return (
       <Layout onNavigate={setCurrentPage}>
@@ -25,17 +27,24 @@ function App() {
         {currentPage === "borrowmanager" && <BorrowManager />}
         {currentPage === "myborrows" && <MyBorrowedBooks />}
       </Layout>
-
     );
   }
 
-  return isRegistering ? (
-    <RegisterForm onSwitchToLogin={() => setIsRegistering(false)} />
-  ) : (
-    <LoginForm
-      onLoginSuccess={() => setIsLoggedIn(true)}
-      onSwitchToRegister={() => setIsRegistering(true)}
-    />
+  return (
+    <>
+      <ExploreBooks />
+      {isRegistering ? (
+        <RegisterForm onSwitchToLogin={() => setIsRegistering(false)} />
+      ) : (
+        <LoginForm
+          onLoginSuccess={() => {
+            setIsLoggedIn(true);
+            setCurrentPage("books");
+          }}
+          onSwitchToRegister={() => setIsRegistering(true)}
+        />
+      )}
+    </>
   );
 }
 
