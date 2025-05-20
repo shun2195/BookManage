@@ -44,6 +44,7 @@ function App() {
                 setShowLogin(false);
                 setShowRegister(true);
               }}
+               onClose={() => setShowLogin(false)}
             />
           </div>
         </div>
