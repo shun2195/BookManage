@@ -17,6 +17,8 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
   const [isRegistering, setIsRegistering] = useState(false);
   const [currentPage, setCurrentPage] = useState("books");
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
 
   const handleLoginSuccess = () => {
     setIsLoggedIn(true);
@@ -26,35 +28,40 @@ function App() {
   return (
     <Layout
       onNavigate={setCurrentPage}
-      onLogin={() => setIsRegistering(false)}
-      onRegister={() => setIsRegistering(true)}
+      onLogin={() => setShowLogin(true)}
+      onRegister={() => setShowRegister(true)}
     >
-      {isLoggedIn ? (
-        <>
-          {currentPage === "books" && <BookManager />}
-          {currentPage === "profile" && <UserProfile />}
-          {currentPage === "stats" && <BookStats />}
-          {currentPage === "changepassword" && <ChangePassword />}
-          {currentPage === "usermanager" && <UserManager />}
-          {currentPage === "borrowmanager" && <BorrowManager />}
-          {currentPage === "myborrows" && <MyBorrowedBooks />}
-          {currentPage === "moderation" && <Moderation />}
-          {currentPage === "system" && <SystemManager />}
-        </>
-      ) : (
-        <>
-          <ExploreBooks />
-          {isRegistering ? (
-            <RegisterForm onSwitchToLogin={() => setIsRegistering(false)} />
-          ) : (
+      <ExploreBooks />
+      {showLogin && (
+        <div className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex justify-content-center align-items-center" style={{ zIndex: 9999 }}>
+          <div className="bg-white p-4 rounded shadow" style={{ width: "400px" }}>
             <LoginForm
-              onLoginSuccess={handleLoginSuccess}
-              onSwitchToRegister={() => setIsRegistering(true)}
+              onLoginSuccess={() => {
+                setIsLoggedIn(true);
+                setCurrentPage("books");
+              }}
+              onSwitchToRegister={() => {
+                setShowLogin(false);
+                setShowRegister(true);
+              }}
             />
-          )}
-        </>
+          </div>
+        </div>
+      )}
+      {showRegister && (
+        <div className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex justify-content-center align-items-center" style={{ zIndex: 9999 }}>
+          <div className="bg-white p-4 rounded shadow" style={{ width: "400px" }}>
+            <RegisterForm
+              onSwitchToLogin={() => {
+                setShowRegister(false);
+                setShowLogin(true);
+              }}
+            />
+          </div>
+        </div>
       )}
     </Layout>
+
   );
 }
 
