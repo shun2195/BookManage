@@ -29,8 +29,9 @@ const User = mongoose.model("User", new mongoose.Schema({
   password: String,
   role: { type: String, default: "user" }, // user, admin, mod, guest, superadmin
   avatarUrl: { type: String, default: "" },
-  isLocked: { type: Boolean, default: false }
-  
+  isLocked: { type: Boolean, default: false },
+  lockedAt: Date // lưu thời điểm bị khóa
+
 }));
 
 const BorrowRecord = mongoose.model("BorrowRecord", new mongoose.Schema({
@@ -100,6 +101,12 @@ const isAdmin = async (req, res, next) => {
   next();
 };
 
+const isSuperAdmin = async (req, res, next) => {
+  const user = await User.findById(req.user.userId);
+  if (user.role === "superadmin") return next();
+  return res.status(403).json({ message: "Chỉ superadmin mới có quyền" });
+};
+
 const isModOrAdmin = async (req, res, next) => {
   const user = await User.findById(req.user.userId);
   if (user.role === "admin" || user.role === "mod") return next();
@@ -131,7 +138,7 @@ app.delete("/books/:id", authMiddleware, isAdmin, async (req, res) => {
 // ========🔁 API mượn - trả==========
 // ➕ Người dùng mượn sách:
 app.post("/borrow", authMiddleware, async (req, res) => {
-  const { bookId } = req.body;
+  const { bookId, returnDate } = req.body;
 
   const alreadyBorrowed = await BorrowRecord.findOne({
     userId: req.user.userId,
@@ -145,13 +152,13 @@ app.post("/borrow", authMiddleware, async (req, res) => {
 
   const newRecord = new BorrowRecord({
     userId: req.user.userId,
-    bookId
+    bookId,
+    returnDate: returnDate ? new Date(returnDate) : null
   });
 
   await newRecord.save();
   res.json({ message: "Đã mượn sách thành công" });
 });
-
 
 // Trả sách
 app.put("/return/:id", authMiddleware, async (req, res) => {
@@ -193,11 +200,14 @@ app.get("/my-borrows", authMiddleware, async (req, res) => {
 // 🔒 Khoá / mở khoá người dùng - chỉ admin
 app.put("/users/:id/lock", authMiddleware, isAdmin, async (req, res) => {
   const { isLocked } = req.body;
-  await User.findByIdAndUpdate(req.params.id, { isLocked });
+
+  await User.findByIdAndUpdate(req.params.id, {
+    isLocked,
+    lockedAt: isLocked ? new Date() : null,
+  });
+
   res.json({ message: isLocked ? "Đã khóa tài khoản" : "Đã mở khóa tài khoản" });
 });
-
-
 
 // 🟢 Đăng ký
 app.post("/register", async (req, res) => {
@@ -312,6 +322,55 @@ app.get("/stats/top-borrowed", authMiddleware, isAdmin, async (req, res) => {
     }
   ]);
   res.json(top);
+});
+//  Xem danh sách các admin
+app.get("/system/admins", authMiddleware, isSuperAdmin, async (req, res) => {
+  const admins = await User.find({ role: "admin" }).select("-password");
+  res.json(admins);
+});
+
+app.patch("/cron/check-overdue", async (req, res) => {
+  const now = new Date();
+  const records = await BorrowRecord.find({
+    status: "Đang mượn",
+    returnDate: { $lt: now },
+  });
+
+  for (const record of records) {
+    record.status = "Quá hạn";
+    await record.save();
+  }
+
+  res.json({ message: `Đã đánh dấu ${records.length} sách quá hạn.` });
+});
+// Mở khóa tài khoản tự động
+app.patch("/cron/unlock-users", async (req, res) => {
+  const unlockDate = new Date();
+  unlockDate.setDate(unlockDate.getDate() - 7); // sau 7 ngày sẽ tự mở
+
+  const unlocked = await User.updateMany(
+    { isLocked: true, lockedAt: { $lte: unlockDate } },
+    { isLocked: false, lockedAt: null }
+  );
+
+  res.json({ message: `Đã mở khóa ${unlocked.modifiedCount} tài khoản.` });
+});
+// Gia hạn sách
+app.patch("/borrow/:id/extend", authMiddleware, async (req, res) => {
+  const { extraDays } = req.body;
+  const record = await BorrowRecord.findById(req.params.id);
+
+  if (!record || record.status !== "Đang mượn") {
+    return res.status(400).json({ message: "Không thể gia hạn bản ghi này." });
+  }
+
+  const newDate = new Date(record.returnDate || Date.now());
+  newDate.setDate(newDate.getDate() + extraDays);
+
+  record.returnDate = newDate;
+  await record.save();
+
+  res.json({ message: "Đã gia hạn thêm " + extraDays + " ngày", returnDate: newDate });
 });
 
 // ✅ Khởi động server

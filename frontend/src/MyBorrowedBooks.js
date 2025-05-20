@@ -37,6 +37,7 @@ function MyBorrowedBooks() {
             <th>Trạng thái</th>
             <th>Người đánh dấu</th>
             <th>Ngày đánh dấu</th>
+            <th>Gia hạn</th>
           </tr>
         </thead>
         <tbody>
@@ -53,6 +54,30 @@ function MyBorrowedBooks() {
               </td>
               <td>{r.returnedBy?.name || "—"}</td>
               <td>{r.returnedAt ? new Date(r.returnedAt).toLocaleDateString("vi-VN") : "—"}</td>
+              <td>
+                {r.status === "Đang mượn" && (
+                  <button
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={async () => {
+                      const confirm = window.confirm("Gia hạn thêm 7 ngày?");
+                      if (!confirm) return;
+                      try {
+                        const res = await axios.patch(`${API}/borrow/${r._id}/extend`, {
+                          extraDays: 7
+                        }, {
+                          headers: { Authorization: `Bearer ${token}` }
+                        });
+                        toast.success(res.data.message);
+                        load();
+                      } catch {
+                        toast.error("❌ Không thể gia hạn");
+                      }
+                    }}
+                  >
+                    ⏳ Gia hạn
+                  </button>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

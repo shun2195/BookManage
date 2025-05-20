@@ -5,6 +5,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const API = "https://bookmanage-backend-ywce.onrender.com";
 
@@ -17,6 +19,10 @@ function BookManager() {
   const [filterCategory, setFilterCategory] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const booksPerPage = 10;
+  const [showBorrowPopup, setShowBorrowPopup] = useState(false);
+  const [selectedBookId, setSelectedBookId] = useState(null);
+  const [returnDate, setReturnDate] = useState(null);
+
 
   const role = localStorage.getItem("role");
   const token = localStorage.getItem("token");
@@ -38,7 +44,7 @@ function BookManager() {
         .filter(b => b.status === "Đang mượn")
         .map(b => b.bookId._id);
       setBorrowedIds(ids);
-    } catch {}
+    } catch { }
   };
 
   useEffect(() => {
@@ -91,12 +97,27 @@ function BookManager() {
       toast.error("❌ Xoá thất bại!");
     }
   };
-  const handleBorrow = async (bookId) => {
+  const handleBorrowClick = (bookId) => {
+    setSelectedBookId(bookId);
+    setShowBorrowPopup(true);
+  };
+
+  const handleBorrowSubmit = async () => {
+    if (!returnDate) {
+      toast.warn("📅 Vui lòng chọn ngày trả sách");
+      return;
+    }
     try {
-      await axios.post(`${API}/borrow`, { bookId }, {
+      await axios.post(`${API}/borrow`, {
+        bookId: selectedBookId,
+        returnDate
+      }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success("✅ Mượn sách thành công");
+      setShowBorrowPopup(false);
+      setReturnDate(null);
+      setSelectedBookId(null);
       loadBorrowedBooks();
     } catch (err) {
       const msg = err.response?.data?.message || "Thao tác thất bại";
@@ -214,19 +235,24 @@ function BookManager() {
               <td>{book.year}</td>
               <td>{book.category}</td>
               <td>
-                <button className="btn btn-primary btn-sm me-2" onClick={() => handleEdit(book)}>Sửa</button>
+
                 {role === "admin" && (
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(book._id)}>Xoá</button>
+                  <>
+                    <button className="btn btn-primary btn-sm me-2" onClick={() => handleEdit(book)}>Sửa</button>
+                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(book._id)}>Xoá</button>
+                  </>
                 )}
+
                 {role === "user" && (
                   <button
                     className="btn btn-sm btn-outline-primary"
                     disabled={borrowedIds.includes(book._id)}
-                    onClick={() => handleBorrow(book._id)}
+                    onClick={() => handleBorrowClick(book._id)}
                   >
                     {borrowedIds.includes(book._id) ? "Đã mượn" : "📥 Mượn"}
                   </button>
                 )}
+
               </td>
             </tr>
           ))}
@@ -250,6 +276,33 @@ function BookManager() {
       </nav>
 
       <ToastContainer />
+      {showBorrowPopup && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex justify-content-center align-items-center"
+          style={{ zIndex: 9999 }}
+        >
+          <div className="bg-white p-4 rounded shadow" style={{ width: "400px" }}>
+            <h5 className="mb-3">📅 Chọn ngày trả sách</h5>
+            <DatePicker
+              selected={returnDate}
+              onChange={(date) => setReturnDate(date)}
+              className="form-control mb-3"
+              dateFormat="dd/MM/yyyy"
+              minDate={new Date()}
+              placeholderText="Chọn ngày"
+            />
+            <div className="d-flex justify-content-between">
+              <button className="btn btn-secondary" onClick={() => setShowBorrowPopup(false)}>
+                Hủy
+              </button>
+              <button className="btn btn-success" onClick={handleBorrowSubmit}>
+                ✅ Mượn
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
