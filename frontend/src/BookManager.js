@@ -11,6 +11,7 @@ const API = "https://bookmanage-backend-ywce.onrender.com";
 function BookManager() {
   const [books, setBooks] = useState([]);
   const [form, setForm] = useState({ title: "", author: "", year: "", category: "" });
+  const [borrowedIds, setBorrowedIds] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
