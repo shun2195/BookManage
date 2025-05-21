@@ -54,6 +54,13 @@ const BorrowRecord = mongoose.model("BorrowRecord", new mongoose.Schema({
     default: "Đang mượn"
   }
 }));
+const Review = mongoose.model("Review", new mongoose.Schema({
+  bookId: { type: mongoose.Schema.Types.ObjectId, ref: "Book" },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  rating: Number,
+  comment: String,
+  createdAt: { type: Date, default: Date.now }
+}));
 
 // Cấu hình lưu ảnh
 const { upload } = require("./cloudinary");
@@ -82,7 +89,7 @@ const authMiddleware = async (req, res, next) => {
 
   const token = authHeader.split(" ")[1];
   try {
-    const decoded = jwt.verify(token, "secret_key");
+    process.env.JWT_SECRET || "secret_key"
     req.user = decoded;
     next();
   } catch (err) {
@@ -120,7 +127,7 @@ app.get("/books", async (req, res) => {
   res.json(books);
 });
 // ➕ Thêm sách mới — chỉ admin
-app.post("/books", upload.single("cover"), async (req, res) => {
+app.post("/books", authMiddleware, isAdmin, upload.single("cover"), async (req, res) => {
   const { title, author, year, category } = req.body;
   const coverUrl = req.file ? req.file.path : "";
   const book = new Book({ title, author, year, category, coverUrl });
@@ -404,6 +411,20 @@ app.patch("/borrow/:id/extend", authMiddleware, async (req, res) => {
   await record.save();
 
   res.json({ message: "Đã gia hạn thêm " + extraDays + " ngày", returnDate: newDate });
+});
+
+app.post("/reviews", authMiddleware, async (req, res) => {
+  const { bookId, rating, comment } = req.body;
+  const exists = await Review.findOne({ userId: req.user.userId, bookId });
+if (exists) return res.status(400).json({ message: "Bạn đã đánh giá rồi." });
+
+  const review = await Review.create({ bookId, userId: req.user.userId, rating, comment });
+  res.json(review);
+});
+
+app.get("/reviews/:bookId", async (req, res) => {
+  const reviews = await Review.find({ bookId: req.params.bookId }).populate("userId", "name");
+  res.json(reviews);
 });
 
 // ✅ Khởi động server
