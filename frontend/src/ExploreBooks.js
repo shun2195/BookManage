@@ -21,7 +21,6 @@ function ExploreBooks() {
     (!filter || book.category === filter)
   );
 
-  // Reset về trang đầu khi tìm kiếm hoặc lọc
   useEffect(() => {
     setCurrentPage(1);
   }, [search, filter]);
@@ -38,7 +37,6 @@ function ExploreBooks() {
     <div className="container mt-4">
       <h3 className="text-primary mb-3">📚 Khám phá sách</h3>
 
-      {/* Tìm kiếm và lọc */}
       <div className="row mb-4">
         <div className="col-md-6">
           <input
@@ -63,11 +61,18 @@ function ExploreBooks() {
         </div>
       </div>
 
-      {/* Hiển thị sách */}
       <div className="row">
         {paginated.map((book) => (
           <div className="col-md-4 mb-4" key={book._id}>
             <div className="card h-100 shadow-sm">
+              {book.coverUrl && (
+                <img
+                  src={book.coverUrl}
+                  className="card-img-top"
+                  alt="Ảnh bìa"
+                  style={{ height: "220px", objectFit: "cover" }}
+                />
+              )}
               <div className="card-body">
                 <h5 className="card-title">{book.title}</h5>
                 <p className="card-text">
@@ -82,7 +87,6 @@ function ExploreBooks() {
         {filtered.length === 0 && <p className="text-muted">Không tìm thấy sách phù hợp.</p>}
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <nav className="d-flex justify-content-center mt-3">
           <ul className="pagination">
