@@ -25,15 +25,22 @@ function App() {
     setShowLogin(false);
   };
 
+  const handleLogout = () => {
+    localStorage.clear();
+    setIsLoggedIn(false);
+    setCurrentPage("books");
+  };
+
   return (
     <Layout
       onNavigate={setCurrentPage}
       onLogin={() => setShowLogin(true)}
-      onRegister={() => setShowRegister(true)}
+      onRegister={!isLoggedIn ? () => setShowRegister(true) : undefined}
+      onLogout={handleLogout}
     >
       {isLoggedIn ? (
         <>
-          {currentPage === "books" && <BookManager />}
+          {currentPage === "books" && <BookManager key="loggedin" />}
           {currentPage === "profile" && <UserProfile />}
           {currentPage === "stats" && <BookStats />}
           {currentPage === "changepassword" && <ChangePassword />}

@@ -12,7 +12,7 @@ const API = "https://bookmanage-backend-ywce.onrender.com";
 
 function BookManager() {
   const [books, setBooks] = useState([]);
-  const [form, setForm] = useState({ title: "", author: "", year: "", category: "" });
+  const [form, setForm] = useState({ title: "", author: "", year: "", category: "", cover: null });
   const [borrowedIds, setBorrowedIds] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
@@ -22,7 +22,7 @@ function BookManager() {
   const [showBorrowPopup, setShowBorrowPopup] = useState(false);
   const [selectedBookId, setSelectedBookId] = useState(null);
   const [returnDate, setReturnDate] = useState(null);
-
+  const [showFormPopup, setShowFormPopup] = useState(false);
 
   const role = localStorage.getItem("role");
   const token = localStorage.getItem("token");
@@ -35,16 +35,15 @@ function BookManager() {
       toast.error("❌ Không thể tải danh sách sách");
     }
   };
+
   const loadBorrowedBooks = async () => {
     try {
       const res = await axios.get(`${API}/my-borrows`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const ids = res.data
-        .filter(b => b.status === "Đang mượn")
-        .map(b => b.bookId._id);
+      const ids = res.data.filter(b => b.status === "Đang mượn").map(b => b.bookId._id);
       setBorrowedIds(ids);
-    } catch { }
+    } catch {}
   };
 
   useEffect(() => {
@@ -53,50 +52,65 @@ function BookManager() {
   }, []);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value, files } = e.target;
+    if (name === "cover") {
+      setForm({ ...form, cover: files[0] });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const formData = new FormData();
+    Object.entries(form).forEach(([key, val]) => formData.append(key, val));
+
     try {
       if (editingId) {
-        await axios.put(`${API}/books/${editingId}`, form, {
-          headers: { Authorization: `Bearer ${token}` }
+        await axios.put(`${API}/books/${editingId}`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
         });
         toast.success("📘 Cập nhật thành công!");
         setEditingId(null);
       } else {
-        await axios.post(`${API}/books`, form, {
-          headers: { Authorization: `Bearer ${token}` }
+        await axios.post(`${API}/books`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
         });
         toast.success("📗 Thêm sách mới thành công!");
       }
-      setForm({ title: "", author: "", year: "", category: "" });
+      setForm({ title: "", author: "", year: "", category: "", cover: null });
+      setShowFormPopup(false);
       loadBooks();
-    } catch (error) {
+    } catch {
       toast.error("❌ Thao tác thất bại!");
     }
   };
 
   const handleEdit = (book) => {
-    setForm(book);
+    setForm({ ...book, cover: null });
     setEditingId(book._id);
+    setShowFormPopup(true);
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc chắn muốn xoá sách này?")) return;
     try {
       await axios.delete(`${API}/books/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` },
       });
       toast.success("🗑️ Đã xoá sách");
       loadBooks();
-    } catch (error) {
+    } catch {
       toast.error("❌ Xoá thất bại!");
     }
   };
+
   const handleBorrowClick = (bookId) => {
     setSelectedBookId(bookId);
     setShowBorrowPopup(true);
@@ -108,11 +122,8 @@ function BookManager() {
       return;
     }
     try {
-      await axios.post(`${API}/borrow`, {
-        bookId: selectedBookId,
-        returnDate
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
+      await axios.post(`${API}/borrow`, { bookId: selectedBookId, returnDate }, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       toast.success("✅ Mượn sách thành công");
       setShowBorrowPopup(false);
@@ -159,60 +170,23 @@ function BookManager() {
     <div className="container mt-5">
       <h2 className="mb-4 text-primary">📚 Quản lý sách</h2>
 
-      {/* Form thêm/sửa — chỉ admin */}
       {role === "admin" && (
-        <form onSubmit={handleSubmit} className="row g-3 mb-4">
-          <div className="col-md-3">
-            <input name="title" className="form-control" placeholder="Tiêu đề" value={form.title} onChange={handleChange} required />
-          </div>
-          <div className="col-md-3">
-            <input name="author" className="form-control" placeholder="Tác giả" value={form.author} onChange={handleChange} required />
-          </div>
-          <div className="col-md-2">
-            <input name="year" className="form-control" placeholder="Năm" value={form.year} onChange={handleChange} required />
-          </div>
-          <div className="col-md-2">
-            <input name="category" className="form-control" placeholder="Thể loại" value={form.category} onChange={handleChange} required />
-          </div>
-          <div className="col-md-2">
-            <button className="btn btn-success w-100">{editingId ? "Cập nhật" : "Thêm"}</button>
-          </div>
-        </form>
+        <button className="btn btn-success mb-3" onClick={() => setShowFormPopup(true)}>➕ Thêm sách</button>
       )}
 
-      {/* Bộ lọc và tìm kiếm */}
+      {/* Bộ lọc */}
       <div className="row mb-3">
         <div className="col-md-4 mb-2">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="🔍 Tìm theo tiêu đề..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setCurrentPage(1);
-            }}
-          />
+          <input type="text" className="form-control" placeholder="🔍 Tìm theo tiêu đề..." value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} />
         </div>
         <div className="col-md-4">
-          <select
-            className="form-select"
-            value={filterCategory}
-            onChange={(e) => {
-              setFilterCategory(e.target.value);
-              setCurrentPage(1);
-            }}
-          >
+          <select className="form-select" value={filterCategory} onChange={(e) => { setFilterCategory(e.target.value); setCurrentPage(1); }}>
             <option value="">📂 Tất cả thể loại</option>
-            {uniqueCategories.map((cat, idx) => (
-              <option key={idx} value={cat}>{cat}</option>
-            ))}
+            {uniqueCategories.map((cat, idx) => <option key={idx} value={cat}>{cat}</option>)}
           </select>
         </div>
         <div className="col-md-4 text-end">
-          <button className="btn btn-outline-success" onClick={exportToExcel}>
-            📤 Xuất Excel
-          </button>
+          <button className="btn btn-outline-success" onClick={exportToExcel}>📤 Xuất Excel</button>
         </div>
       </div>
 
@@ -235,40 +209,27 @@ function BookManager() {
               <td>{book.year}</td>
               <td>{book.category}</td>
               <td>
-
                 {role === "admin" && (
                   <>
                     <button className="btn btn-primary btn-sm me-2" onClick={() => handleEdit(book)}>Sửa</button>
                     <button className="btn btn-danger btn-sm" onClick={() => handleDelete(book._id)}>Xoá</button>
                   </>
                 )}
-
                 {role === "user" && (
-                  <button
-                    className="btn btn-sm btn-outline-primary"
-                    disabled={borrowedIds.includes(book._id)}
-                    onClick={() => handleBorrowClick(book._id)}
-                  >
+                  <button className="btn btn-sm btn-outline-primary" disabled={borrowedIds.includes(book._id)} onClick={() => handleBorrowClick(book._id)}>
                     {borrowedIds.includes(book._id) ? "Đã mượn" : "📥 Mượn"}
                   </button>
                 )}
-
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {/* Pagination */}
       <nav className="d-flex justify-content-center mt-3">
         <ul className="pagination">
           {Array.from({ length: totalPages }, (_, i) => (
-            <li
-              key={i}
-              className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
-              style={{ cursor: "pointer" }}
-              onClick={() => setCurrentPage(i + 1)}
-            >
+            <li key={i} className={`page-item ${currentPage === i + 1 ? "active" : ""}`} style={{ cursor: "pointer" }} onClick={() => setCurrentPage(i + 1)}>
               <span className="page-link">{i + 1}</span>
             </li>
           ))}
@@ -276,33 +237,47 @@ function BookManager() {
       </nav>
 
       <ToastContainer />
-      {showBorrowPopup && (
-        <div
-          className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex justify-content-center align-items-center"
-          style={{ zIndex: 9999 }}
-        >
-          <div className="bg-white p-4 rounded shadow" style={{ width: "400px" }}>
-            <h5 className="mb-3">📅 Chọn ngày trả sách</h5>
-            <DatePicker
-              selected={returnDate}
-              onChange={(date) => setReturnDate(date)}
-              className="form-control mb-3"
-              dateFormat="dd/MM/yyyy"
-              minDate={new Date()}
-              placeholderText="Chọn ngày"
-            />
-            <div className="d-flex justify-content-between">
-              <button className="btn btn-secondary" onClick={() => setShowBorrowPopup(false)}>
-                Hủy
-              </button>
-              <button className="btn btn-success" onClick={handleBorrowSubmit}>
-                ✅ Mượn
-              </button>
+
+      {/* Popup thêm/sửa sách */}
+      {showFormPopup && (
+        <div className="modal show d-block" tabIndex="-1" style={{ background: "#00000080" }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <form onSubmit={handleSubmit} encType="multipart/form-data">
+                <div className="modal-header">
+                  <h5 className="modal-title">{editingId ? "Cập nhật sách" : "Thêm sách mới"}</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowFormPopup(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <input name="title" className="form-control mb-2" placeholder="Tiêu đề" value={form.title} onChange={handleChange} required />
+                  <input name="author" className="form-control mb-2" placeholder="Tác giả" value={form.author} onChange={handleChange} required />
+                  <input name="year" className="form-control mb-2" placeholder="Năm" value={form.year} onChange={handleChange} required />
+                  <input name="category" className="form-control mb-2" placeholder="Thể loại" value={form.category} onChange={handleChange} required />
+                  <input type="file" name="cover" className="form-control mb-2" onChange={handleChange} accept="image/*" />
+                </div>
+                <div className="modal-footer">
+                  <button className="btn btn-primary" type="submit">{editingId ? "Cập nhật" : "Thêm"}</button>
+                  <button className="btn btn-secondary" onClick={() => setShowFormPopup(false)}>Đóng</button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
       )}
 
+      {/* Popup mượn sách */}
+      {showBorrowPopup && (
+        <div className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex justify-content-center align-items-center" style={{ zIndex: 9999 }}>
+          <div className="bg-white p-4 rounded shadow" style={{ width: "400px" }}>
+            <h5 className="mb-3">📅 Chọn ngày trả sách</h5>
+            <DatePicker selected={returnDate} onChange={(date) => setReturnDate(date)} className="form-control mb-3" dateFormat="dd/MM/yyyy" minDate={new Date()} placeholderText="Chọn ngày" />
+            <div className="d-flex justify-content-between">
+              <button className="btn btn-secondary" onClick={() => setShowBorrowPopup(false)}>Hủy</button>
+              <button className="btn btn-success" onClick={handleBorrowSubmit}>✅ Mượn</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
