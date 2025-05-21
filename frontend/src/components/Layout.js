@@ -34,35 +34,54 @@ export default function Layout({ children, onNavigate, onLogin, onRegister }) {
             <h4
               className="m-0 fw-bold"
               style={{ cursor: "pointer" }}
-              onClick={() => onNavigate(isLoggedIn ? "books" : "explore")}
+              onClick={() => onNavigate("explore")}
             >
               📚 NhungTruc
             </h4>
             <nav className="d-flex gap-3">
-              {isLoggedIn && (
-                <span style={{ cursor: "pointer" }} onClick={() => onNavigate("books")}>
-                  📘 Quản lý sách
+              {(!role || role === "user") && (
+                <span style={{ cursor: "pointer" }} onClick={() => onNavigate("explore")}>
+                  📖 Khám phá sách
                 </span>
               )}
+
               <span style={{ cursor: "pointer" }} onClick={() => onNavigate("stats")}>
                 📊 Thống kê
               </span>
+
               {role === "admin" && (
                 <>
-                  <span style={{ cursor: "pointer" }} onClick={() => onNavigate("usermanager")}>👥 Người dùng</span>
-                  <span style={{ cursor: "pointer" }} onClick={() => onNavigate("borrowmanager")}>📋 Mượn – Trả sách</span>
+                  <span style={{ cursor: "pointer" }} onClick={() => onNavigate("books")}>
+                    📘 Quản lý sách
+                  </span>
+                  <span style={{ cursor: "pointer" }} onClick={() => onNavigate("usermanager")}>
+                    👥 Người dùng
+                  </span>
+                  <span style={{ cursor: "pointer" }} onClick={() => onNavigate("borrowmanager")}>
+                    📋 Mượn – Trả sách
+                  </span>
                 </>
               )}
+
               {role === "mod" && (
-                <span style={{ cursor: "pointer" }} onClick={() => onNavigate("moderation")}>🛠 Kiểm duyệt sách</span>
+                <span style={{ cursor: "pointer" }} onClick={() => onNavigate("moderation")}>
+                  🛠 Kiểm duyệt sách
+                </span>
               )}
+
               {role === "superadmin" && (
-                <span style={{ cursor: "pointer" }} onClick={() => onNavigate("system")}>⚙️ Quản lý hệ thống</span>
+                <span style={{ cursor: "pointer" }} onClick={() => onNavigate("system")}>
+                  ⚙️ Quản lý hệ thống
+                </span>
               )}
+
               {role === "user" && (
-                <span style={{ cursor: "pointer" }} onClick={() => onNavigate("myborrows")}>📖 Sách đang mượn</span>
+                <span style={{ cursor: "pointer" }} onClick={() => onNavigate("myborrows")}>
+                  📖 Sách đang mượn
+                </span>
               )}
             </nav>
+
           </div>
 
           <div className="position-relative" ref={menuRef}>

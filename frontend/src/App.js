@@ -15,20 +15,21 @@ import SystemManager from "./SystemManager";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
-  const [currentPage, setCurrentPage] = useState("books");
+  const [currentPage, setCurrentPage] = useState("explore");
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
 
   const handleLoginSuccess = () => {
     setIsLoggedIn(true);
-    setCurrentPage("books");
+    const role = localStorage.getItem("role");
+    setCurrentPage(role === "admin" ? "books" : "explore");
     setShowLogin(false);
   };
 
   const handleLogout = () => {
     localStorage.clear();
     setIsLoggedIn(false);
-    setCurrentPage("books");
+    setCurrentPage("explore");
   };
 
   return (
@@ -38,11 +39,12 @@ function App() {
       onRegister={!isLoggedIn ? () => setShowRegister(true) : undefined}
       onLogout={handleLogout}
     >
-      {isLoggedIn ? (
+      {currentPage === "explore" && <ExploreBooks />}
+      {currentPage === "stats" && <BookStats />}
+      {isLoggedIn && (
         <>
           {currentPage === "books" && <BookManager key="loggedin" />}
           {currentPage === "profile" && <UserProfile />}
-          {currentPage === "stats" && <BookStats />}
           {currentPage === "changepassword" && <ChangePassword />}
           {currentPage === "usermanager" && <UserManager />}
           {currentPage === "borrowmanager" && <BorrowManager />}
@@ -50,29 +52,27 @@ function App() {
           {currentPage === "moderation" && <Moderation />}
           {currentPage === "system" && <SystemManager />}
         </>
-      ) : (
-        <>
-          <ExploreBooks />
-          {showLogin && (
-            <LoginForm
-              onLoginSuccess={handleLoginSuccess}
-              onSwitchToRegister={() => {
-                setShowLogin(false);
-                setShowRegister(true);
-              }}
-              onClose={() => setShowLogin(false)}
-            />
-          )}
-          {showRegister && (
-            <RegisterForm
-              onSwitchToLogin={() => {
-                setShowRegister(false);
-                setShowLogin(true);
-              }}
-              onClose={() => setShowRegister(false)}
-            />
-          )}
-        </>
+      )}
+
+      {showLogin && (
+        <LoginForm
+          onLoginSuccess={handleLoginSuccess}
+          onSwitchToRegister={() => {
+            setShowLogin(false);
+            setShowRegister(true);
+          }}
+          onClose={() => setShowLogin(false)}
+        />
+      )}
+
+      {showRegister && (
+        <RegisterForm
+          onSwitchToLogin={() => {
+            setShowRegister(false);
+            setShowLogin(true);
+          }}
+          onClose={() => setShowRegister(false)}
+        />
       )}
     </Layout>
   );
