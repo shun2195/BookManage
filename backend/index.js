@@ -300,10 +300,21 @@ app.put("/users/:id/role", authMiddleware, isAdmin, async (req, res) => {
 });
 
 // Upload avatar
+const { uploader } = require("cloudinary").v2;
+
 app.post("/users/upload-avatar", authMiddleware, upload.single("avatar"), async (req, res) => {
-  const url = req.file ? req.file.path : "";
-  await User.findByIdAndUpdate(req.user.userId, { avatarUrl: url });
-  res.json({ avatarUrl: url });
+  try {
+    const file = req.file;
+    const result = await uploader.upload(file.path, {
+      folder: "avatars", // Tạo folder riêng trong Cloudinary
+    });
+
+    await User.findByIdAndUpdate(req.user.userId, { avatarUrl: result.secure_url });
+    res.json({ avatarUrl: result.secure_url });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Lỗi khi upload avatar" });
+  }
 });
 
 //API tổng số sách đang được mượn
