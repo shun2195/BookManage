@@ -17,27 +17,22 @@ import BookDetail from "./BookDetail";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
-  const [currentPage, setCurrentPage] = useState("explore");
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
 
   const handleLoginSuccess = () => {
     setIsLoggedIn(true);
-    const role = localStorage.getItem("role");
-    setCurrentPage(role === "admin" ? "books" : "explore");
     setShowLogin(false);
   };
 
   const handleLogout = () => {
     localStorage.clear();
     setIsLoggedIn(false);
-    setCurrentPage("explore");
   };
 
   return (
     <Router>
       <Layout
-        onNavigate={setCurrentPage}
         onLogin={() => setShowLogin(true)}
         onRegister={!isLoggedIn ? () => setShowRegister(true) : undefined}
         onLogout={handleLogout}
@@ -45,21 +40,16 @@ function App() {
         <Routes>
           <Route path="/" element={<ExploreBooks />} />
           <Route path="/book/:id" element={<BookDetail />} />
+          <Route path="/stats" element={<BookStats />} />
+          <Route path="/books" element={<BookManager />} />
+          <Route path="/profile" element={<UserProfile />} />
+          <Route path="/changepassword" element={<ChangePassword />} />
+          <Route path="/usermanager" element={<UserManager />} />
+          <Route path="/borrowmanager" element={<BorrowManager />} />
+          <Route path="/myborrows" element={<MyBorrowedBooks />} />
+          <Route path="/moderation" element={<Moderation />} />
+          <Route path="/system" element={<SystemManager />} />
         </Routes>
-
-        {currentPage === "stats" && <BookStats />}
-        {isLoggedIn && (
-          <>
-            {currentPage === "books" && <BookManager key="loggedin" />}
-            {currentPage === "profile" && <UserProfile />}
-            {currentPage === "changepassword" && <ChangePassword />}
-            {currentPage === "usermanager" && <UserManager />}
-            {currentPage === "borrowmanager" && <BorrowManager />}
-            {currentPage === "myborrows" && <MyBorrowedBooks />}
-            {currentPage === "moderation" && <Moderation />}
-            {currentPage === "system" && <SystemManager />}
-          </>
-        )}
 
         {showLogin && (
           <LoginForm
