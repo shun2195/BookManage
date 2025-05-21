@@ -5,17 +5,19 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const path = require("path");
-
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
+// ======= Kết nối MongoDB =======
 mongoose.connect("mongodb+srv://nik2192005:Nhung123@cluster0.0wm9yn7.mongodb.net/bookdb?retryWrites=true&w=majority&appName=Cluster0", {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
 
+// ======= Mô hình =======
 const Book = mongoose.model("Book", new mongoose.Schema({
   title: String,
   author: String,
@@ -28,10 +30,11 @@ const User = mongoose.model("User", new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
   password: String,
-  role: { type: String, default: "user" },
+  role: { type: String, default: "user" }, // user, admin, mod, guest, superadmin
   avatarUrl: { type: String, default: "" },
   isLocked: { type: Boolean, default: false },
-  lockedAt: Date
+  lockedAt: Date // lưu thời điểm bị khóa
+
 }));
 
 const BorrowRecord = mongoose.model("BorrowRecord", new mongoose.Schema({
@@ -39,26 +42,34 @@ const BorrowRecord = mongoose.model("BorrowRecord", new mongoose.Schema({
   bookId: { type: mongoose.Schema.Types.ObjectId, ref: "Book" },
   borrowDate: { type: Date, default: Date.now },
   returnDate: Date,
-  returnedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  returnedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // admin hoặc người dùng tự đánh dấu
   returnedAt: Date,
-  status: { type: String, enum: ["Đang mượn", "Đã trả", "Quá hạn"], default: "Đang mượn" }
+  status: {
+    type: String,
+    enum: ["Đang mượn", "Đã trả", "Quá hạn"],
+    default: "Đang mượn"
+  }
 }));
 
+const multer = require("multer");
+const path = require("path");
+
+// Cấu hình lưu ảnh
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
-    const fileName = `${Date.now()}${ext}`;
-    cb(null, fileName);
+    cb(null, Date.now() + ext);
   },
 });
 const upload = multer({ storage });
-
+// ======= Tạo admin và mod nếu chưa có =======
 (async () => {
   const usersToCreate = [
     { email: "admin@example.com", password: "admin123", name: "Admin", role: "admin" },
     { email: "mod@example.com", password: "mod123", name: "Mod Kiểm duyệt", role: "mod" },
   ];
+
   for (const user of usersToCreate) {
     const exists = await User.findOne({ email: user.email });
     if (!exists) {
@@ -69,9 +80,11 @@ const upload = multer({ storage });
   }
 })();
 
+// ======= Middleware xác thực =======
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ message: "Thiếu token" });
+
   const token = authHeader.split(" ")[1];
   try {
     const decoded = jwt.verify(token, "secret_key");
@@ -84,7 +97,9 @@ const authMiddleware = async (req, res, next) => {
 
 const isAdmin = async (req, res, next) => {
   const user = await User.findById(req.user.userId);
-  if (user.role !== "admin") return res.status(403).json({ message: "Chỉ admin mới được thực hiện chức năng này" });
+  if (user.role !== "admin") {
+    return res.status(403).json({ message: "Chỉ admin mới được thực hiện chức năng này" });
+  }
   next();
 };
 
@@ -94,14 +109,23 @@ const isSuperAdmin = async (req, res, next) => {
   return res.status(403).json({ message: "Chỉ superadmin mới có quyền" });
 };
 
-// 📚 Lấy danh sách sách
+const isModOrAdmin = async (req, res, next) => {
+  const user = await User.findById(req.user.userId);
+  if (user.role === "admin" || user.role === "mod") return next();
+  return res.status(403).json({ message: "Chỉ mod hoặc admin mới có quyền" });
+};
+
+// ======= API =======
+
+
+// ========📚 API sách=========
+// 📚 Lấy danh sách sách (ai cũng xem được)
 app.get("/books", async (req, res) => {
   const books = await Book.find();
   res.json(books);
 });
-
-// ➕ Thêm sách mới
-app.post("/books", authMiddleware, isAdmin, upload.single("cover"), async (req, res) => {
+// ➕ Thêm sách mới — chỉ admin
+app.post("/books", upload.single("cover"), async (req, res) => {
   const { title, author, year, category } = req.body;
   const coverUrl = req.file ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}` : "";
   const book = new Book({ title, author, year, category, coverUrl });
@@ -109,17 +133,15 @@ app.post("/books", authMiddleware, isAdmin, upload.single("cover"), async (req, 
   res.json(book);
 });
 
-// ✏️ Cập nhật sách
-app.put("/books/:id", authMiddleware, isAdmin, upload.single("cover"), async (req, res) => {
+// ❌ Xoá sách — chỉ admin
+app.put("/books/:id", upload.single("cover"), async (req, res) => {
   const { title, author, year, category } = req.body;
   const update = { title, author, year, category };
   if (req.file) update.coverUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
   const updated = await Book.findByIdAndUpdate(req.params.id, update, { new: true });
   res.json(updated);
 });
-
-// ❌ Xoá sách
-app.delete("/books/:id", authMiddleware, isAdmin, async (req, res) => {
+app.delete("/books/:id", async (req, res) => {
   await Book.findByIdAndDelete(req.params.id);
   res.json({ message: "Đã xoá sách" });
 });
