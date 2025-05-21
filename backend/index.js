@@ -24,6 +24,8 @@ const Book = mongoose.model("Book", new mongoose.Schema({
   year: Number,
   category: String,
   coverUrl: String,
+  description: String,
+  fileUrl: String
 }));
 
 const User = mongoose.model("User", new mongoose.Schema({
@@ -127,6 +129,12 @@ app.post("/books", upload.single("cover"), async (req, res) => {
   const coverUrl = req.file ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}` : "";
   const book = new Book({ title, author, year, category, coverUrl });
   await book.save();
+  res.json(book);
+});
+
+app.get('/books/:id', async (req, res) => {
+  const book = await Book.findById(req.params.id);
+  if (!book) return res.status(404).json({ message: 'Không tìm thấy sách' });
   res.json(book);
 });
 

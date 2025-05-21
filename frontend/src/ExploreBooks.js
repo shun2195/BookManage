@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const API = "https://bookmanage-backend-ywce.onrender.com";
@@ -9,6 +10,7 @@ function ExploreBooks() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios.get(`${API}/books`)
@@ -63,7 +65,12 @@ function ExploreBooks() {
 
       <div className="row">
         {paginated.map((book) => (
-          <div className="col-lg-2 col-md-3 col-sm-4 col-6 mb-4" key={book._id}>
+          <div
+            className="col-lg-2 col-md-3 col-sm-4 col-6 mb-4"
+            key={book._id}
+            onClick={() => navigate(`/book/${book._id}`)}
+            style={{ cursor: "pointer" }}
+          >
             <div className="card h-100 border-0 shadow-sm">
               {book.coverUrl ? (
                 <img

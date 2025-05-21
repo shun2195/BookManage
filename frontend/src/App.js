@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import BookManager from "./BookManager";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
@@ -12,6 +13,7 @@ import MyBorrowedBooks from "./MyBorrowedBooks";
 import ExploreBooks from "./ExploreBooks";
 import Moderation from "./Moderation";
 import SystemManager from "./SystemManager";
+import BookDetail from "./BookDetail";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
@@ -33,48 +35,54 @@ function App() {
   };
 
   return (
-    <Layout
-      onNavigate={setCurrentPage}
-      onLogin={() => setShowLogin(true)}
-      onRegister={!isLoggedIn ? () => setShowRegister(true) : undefined}
-      onLogout={handleLogout}
-    >
-      {currentPage === "explore" && <ExploreBooks />}
-      {currentPage === "stats" && <BookStats />}
-      {isLoggedIn && (
-        <>
-          {currentPage === "books" && <BookManager key="loggedin" />}
-          {currentPage === "profile" && <UserProfile />}
-          {currentPage === "changepassword" && <ChangePassword />}
-          {currentPage === "usermanager" && <UserManager />}
-          {currentPage === "borrowmanager" && <BorrowManager />}
-          {currentPage === "myborrows" && <MyBorrowedBooks />}
-          {currentPage === "moderation" && <Moderation />}
-          {currentPage === "system" && <SystemManager />}
-        </>
-      )}
+    <Router>
+      <Layout
+        onNavigate={setCurrentPage}
+        onLogin={() => setShowLogin(true)}
+        onRegister={!isLoggedIn ? () => setShowRegister(true) : undefined}
+        onLogout={handleLogout}
+      >
+        <Routes>
+          <Route path="/" element={<ExploreBooks />} />
+          <Route path="/book/:id" element={<BookDetail />} />
+        </Routes>
 
-      {showLogin && (
-        <LoginForm
-          onLoginSuccess={handleLoginSuccess}
-          onSwitchToRegister={() => {
-            setShowLogin(false);
-            setShowRegister(true);
-          }}
-          onClose={() => setShowLogin(false)}
-        />
-      )}
+        {currentPage === "stats" && <BookStats />}
+        {isLoggedIn && (
+          <>
+            {currentPage === "books" && <BookManager key="loggedin" />}
+            {currentPage === "profile" && <UserProfile />}
+            {currentPage === "changepassword" && <ChangePassword />}
+            {currentPage === "usermanager" && <UserManager />}
+            {currentPage === "borrowmanager" && <BorrowManager />}
+            {currentPage === "myborrows" && <MyBorrowedBooks />}
+            {currentPage === "moderation" && <Moderation />}
+            {currentPage === "system" && <SystemManager />}
+          </>
+        )}
 
-      {showRegister && (
-        <RegisterForm
-          onSwitchToLogin={() => {
-            setShowRegister(false);
-            setShowLogin(true);
-          }}
-          onClose={() => setShowRegister(false)}
-        />
-      )}
-    </Layout>
+        {showLogin && (
+          <LoginForm
+            onLoginSuccess={handleLoginSuccess}
+            onSwitchToRegister={() => {
+              setShowLogin(false);
+              setShowRegister(true);
+            }}
+            onClose={() => setShowLogin(false)}
+          />
+        )}
+
+        {showRegister && (
+          <RegisterForm
+            onSwitchToLogin={() => {
+              setShowRegister(false);
+              setShowLogin(true);
+            }}
+            onClose={() => setShowRegister(false)}
+          />
+        )}
+      </Layout>
+    </Router>
   );
 }
 
