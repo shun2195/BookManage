@@ -80,7 +80,7 @@ function RegisterForm({ onSwitchToLogin, onClose }) {
           </div>
         </form>
         <ToastContainer />
-        {showLogin && (
+        {/* {showLogin && (
           <div className="modal d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
             <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content p-3">
@@ -100,7 +100,7 @@ function RegisterForm({ onSwitchToLogin, onClose }) {
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
       </div>
     </div>
