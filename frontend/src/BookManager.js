@@ -191,9 +191,10 @@ function BookManager() {
       </div>
 
       {/* Danh sách sách */}
-      <table className="table table-striped table-bordered">
+      <table className="table table-striped table-bordered align-middle text-center">
         <thead className="table-dark">
           <tr>
+            <th>Ảnh bìa</th>
             <th>Tiêu đề</th>
             <th>Tác giả</th>
             <th>Năm</th>
@@ -204,6 +205,13 @@ function BookManager() {
         <tbody>
           {paginatedBooks.map((book) => (
             <tr key={book._id}>
+              <td>
+                {book.coverUrl ? (
+                  <img src={book.coverUrl} alt="Ảnh bìa" width="60" height="80" style={{ objectFit: "cover", borderRadius: "4px" }} />
+                ) : (
+                  <span className="text-muted">Không có</span>
+                )}
+              </td>
               <td>{book.title}</td>
               <td>{book.author}</td>
               <td>{book.year}</td>
