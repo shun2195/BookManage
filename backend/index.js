@@ -8,7 +8,6 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use("/uploads", express.static("uploads"));
 
 // ======= Kết nối MongoDB =======
 mongoose.connect("mongodb+srv://nik2192005:Nhung123@cluster0.0wm9yn7.mongodb.net/bookdb?retryWrites=true&w=majority&appName=Cluster0", {
@@ -117,14 +116,14 @@ app.get("/books", async (req, res) => {
   res.json(books);
 });
 // ➕ Thêm sách mới — chỉ admin
-app.post("/books", authMiddleware, isAdmin, upload.single("cover"), async (req, res) => {
-  const { title, author, year, category, description } = req.body;
-  const coverUrl = req.file?.path || "";
-
-  const book = new Book({ title, author, year, category, description, coverUrl });
+app.post("/books", upload.single("cover"), async (req, res) => {
+  const { title, author, year, category } = req.body;
+  const coverUrl = req.file ? req.file.path : "";
+  const book = new Book({ title, author, year, category, coverUrl });
   await book.save();
   res.json(book);
 });
+
 
 
 app.get('/books/:id', async (req, res) => {
@@ -302,10 +301,11 @@ app.put("/users/:id/role", authMiddleware, isAdmin, async (req, res) => {
 
 // Upload avatar
 app.post("/users/upload-avatar", authMiddleware, upload.single("avatar"), async (req, res) => {
-  const url = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+  const url = req.file ? req.file.path : "";
   await User.findByIdAndUpdate(req.user.userId, { avatarUrl: url });
   res.json({ avatarUrl: url });
 });
+
 //API tổng số sách đang được mượn
 app.get("/stats/borrowed-count", authMiddleware, isAdmin, async (req, res) => {
   const count = await BorrowRecord.countDocuments({ status: "Đang mượn" });

@@ -1,23 +1,22 @@
+// cloudinary.js
 const cloudinary = require("cloudinary").v2;
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const multer = require("multer");
-require("dotenv").config();
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: "dotlbin8d",
+  api_key: "435742649524788",
+  api_secret: "Lju1lOwPJVl4WFovWnzbS4OvkNk",
 });
 
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: "book-covers",
+    folder: "book_covers", // tên thư mục trên Cloudinary
     allowed_formats: ["jpg", "jpeg", "png", "webp"],
-    transformation: [{ width: 500, crop: "limit" }],
+    transformation: [{ width: 600, height: 800, crop: "limit" }],
   },
 });
 
-const upload = multer({ storage });
+const upload = require("multer")({ storage });
 
 module.exports = { cloudinary, upload };
