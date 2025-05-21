@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 const API = "https://bookmanage-backend-ywce.onrender.com";
-const BOOKS_PER_PAGE = 9;
+const BOOKS_PER_PAGE = 12;
 
 function ExploreBooks() {
   const [books, setBooks] = useState([]);
@@ -63,34 +63,30 @@ function ExploreBooks() {
 
       <div className="row">
         {paginated.map((book) => (
-          <div className="col-md-4 mb-4" key={book._id}>
-            <div className="card h-100 shadow-sm">
+          <div className="col-lg-2 col-md-3 col-sm-4 col-6 mb-4" key={book._id}>
+            <div className="card h-100 border-0 shadow-sm">
               {book.coverUrl ? (
                 <img
                   src={book.coverUrl}
                   className="card-img-top"
                   alt="Ảnh bìa"
-                  style={{ height: "220px", objectFit: "cover", borderTopLeftRadius: "6px", borderTopRightRadius: "6px" }}
+                  style={{ aspectRatio: "2 / 3", objectFit: "contain", backgroundColor: "#f8f9fa", padding: "6px" }}
                 />
               ) : (
                 <div
                   className="d-flex justify-content-center align-items-center bg-light text-muted"
-                  style={{ height: "220px" }}
+                  style={{ aspectRatio: "2 / 3" }}
                 >
                   Không có ảnh bìa
                 </div>
               )}
-              <div className="card-body">
-                <h5 className="card-title text-truncate" title={book.title}>{book.title}</h5>
-                <p className="card-text mb-1">
-                  <strong>Tác giả:</strong> {book.author}
+              <div className="card-body px-2 py-2">
+                <h6 className="card-title text-truncate mb-1" title={book.title} style={{ fontWeight: 600 }}>{book.title}</h6>
+                <p className="text-muted mb-1" style={{ fontSize: "13px" }}>
+                  Tác giả: {book.author}<br />
+                  Năm: {book.year}
                 </p>
-                <p className="card-text mb-1">
-                  <strong>Năm:</strong> {book.year}
-                </p>
-                <p className="card-text">
-                  <strong>Thể loại:</strong> {book.category}
-                </p>
+                <p className="text-muted" style={{ fontSize: "13px" }}>Thể loại: {book.category}</p>
               </div>
             </div>
           </div>
