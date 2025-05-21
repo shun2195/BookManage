@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 const API = "https://bookmanage-backend-ywce.onrender.com";
-const BOOKS_PER_PAGE = 12;
+const BOOKS_PER_PAGE = 24;
 
 function ExploreBooks() {
   const [books, setBooks] = useState([]);
@@ -61,33 +61,48 @@ function ExploreBooks() {
         </div>
       </div>
 
-      <div className="row">
+      <div
+        className="mb-4"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+          gap: "16px"
+        }}
+      >
         {paginated.map((book) => (
-          <div className="col-lg-2 col-md-3 col-sm-4 col-6 mb-4" key={book._id}>
-            <div className="card h-100 border-0 shadow-sm">
-              {book.coverUrl ? (
-                <img
-                  src={book.coverUrl}
-                  className="card-img-top"
-                  alt="Ảnh bìa"
-                  style={{ aspectRatio: "2 / 3", objectFit: "contain", backgroundColor: "#f8f9fa", padding: "6px" }}
-                />
-              ) : (
-                <div
-                  className="d-flex justify-content-center align-items-center bg-light text-muted"
-                  style={{ aspectRatio: "2 / 3" }}
-                >
-                  Không có ảnh bìa
-                </div>
-              )}
-              <div className="card-body px-2 py-2">
-                <h6 className="card-title text-truncate mb-1" title={book.title} style={{ fontWeight: 600 }}>{book.title}</h6>
-                <p className="text-muted mb-1" style={{ fontSize: "13px" }}>
-                  Tác giả: {book.author}<br />
-                  Năm: {book.year}
-                </p>
-                <p className="text-muted" style={{ fontSize: "13px" }}>Thể loại: {book.category}</p>
+          <div key={book._id} className="border shadow-sm rounded h-100">
+            {book.coverUrl ? (
+              <img
+                src={book.coverUrl}
+                className="w-100"
+                alt="Ảnh bìa"
+                style={{ aspectRatio: "2 / 3", objectFit: "contain", backgroundColor: "#f8f9fa", padding: "6px" }}
+              />
+            ) : (
+              <div
+                className="d-flex justify-content-center align-items-center bg-light text-muted"
+                style={{ aspectRatio: "2 / 3" }}
+              >
+                Không có ảnh bìa
               </div>
+            )}
+            <div className="px-2 py-2">
+              <h6
+                className="text-truncate mb-1"
+                title={book.title}
+                style={{ fontWeight: 600, fontSize: "14px" }}
+              >
+                {book.title}
+              </h6>
+              <p className="text-muted mb-1" style={{ fontSize: "12px" }}>
+                Tác giả: {book.author}
+              </p>
+              <p className="text-muted mb-1" style={{ fontSize: "12px" }}>
+                Năm: {book.year}
+              </p>
+              <p className="text-muted mb-0" style={{ fontSize: "12px" }}>
+                Thể loại: {book.category}
+              </p>
             </div>
           </div>
         ))}
