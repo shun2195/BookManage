@@ -38,21 +38,26 @@ function BookDetail() {
 
   const handleBorrow = async () => {
   const token = localStorage.getItem("token");
+
   if (!token) {
-    setShowLogin(true);
+    toast.warn("🛑 Vui lòng đăng nhập để mượn sách.");
+    const confirmLogin = window.confirm("Bạn cần đăng nhập để mượn sách. Mở form đăng nhập?");
+    if (confirmLogin) {
+      // 👉 Đây là nơi bạn cần mở popup login
+      window.dispatchEvent(new Event("open-login"));
+    }
     return;
   }
 
   try {
     await axios.post(`${API}/borrow`, { bookId: id }, {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     });
-    toast.success("📚 Đã mượn sách thành công!");
-  } catch {
+    toast.success("✅ Mượn sách thành công!");
+  } catch (err) {
     toast.error("❌ Mượn sách thất bại hoặc đã mượn rồi.");
   }
 };
-
 
   const handleReviewChange = (e) => {
     setReviewForm({ ...reviewForm, [e.target.name]: e.target.value });

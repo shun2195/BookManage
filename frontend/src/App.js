@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import BookManager from "./BookManager";
 import LoginForm from "./LoginForm";
@@ -29,6 +29,13 @@ function App() {
     localStorage.clear();
     setIsLoggedIn(false);
   };
+
+  // ✅ Tự động mở form login nếu bị yêu cầu qua dispatch
+  useEffect(() => {
+    const handleOpenLogin = () => setShowLogin(true);
+    window.addEventListener("open-login", handleOpenLogin);
+    return () => window.removeEventListener("open-login", handleOpenLogin);
+  }, []);
 
   return (
     <Router>

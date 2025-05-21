@@ -7,6 +7,8 @@ const jwt = require("jsonwebtoken");
 const path = require("path");
 const app = express();
 const cloudinary = require("cloudinary").v2;
+const methodOverride = require("method-override");
+app.use(methodOverride("_method"));
 
 
 app.use(cors({

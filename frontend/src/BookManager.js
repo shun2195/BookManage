@@ -61,36 +61,45 @@ function BookManager() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData();
-    Object.entries(form).forEach(([key, val]) => formData.append(key, val));
+  e.preventDefault();
+  const formData = new FormData();
 
-    try {
-      if (editingId) {
-        await axios.put(`${API}/books/${editingId}`, formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        });
-        toast.success("📘 Cập nhật thành công!");
-        setEditingId(null);
-      } else {
-        await axios.post(`${API}/books`, formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        });
-        toast.success("📗 Thêm sách mới thành công!");
-      }
-      setForm({ title: "", author: "", year: "", category: "", cover: null });
-      setShowFormPopup(false);
-      loadBooks();
-    } catch {
-      toast.error("❌ Thao tác thất bại!");
+  Object.entries(form).forEach(([key, val]) => {
+    formData.append(key, val);
+  });
+
+  if (editingId) {
+    formData.append("_method", "PUT"); // 👈 override method
+  }
+
+  try {
+    if (editingId) {
+      await axios.post(`${API}/books/${editingId}`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      toast.success("📘 Cập nhật thành công!");
+      setEditingId(null);
+    } else {
+      await axios.post(`${API}/books`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      toast.success("📗 Thêm sách mới thành công!");
     }
-  };
+    setForm({ title: "", author: "", year: "", category: "", cover: null });
+    setShowFormPopup(false);
+    loadBooks();
+  } catch (err) {
+    const msg = err.response?.data?.message || "Thao tác thất bại!";
+    toast.error(`❌ ${msg}`);
+  }
+};
+
 
   const handleEdit = (book) => {
     setForm({ ...book, cover: null });
