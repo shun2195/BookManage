@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
-export default function Layout({ children, onNavigate, onLogin, onRegister }) {
+export default function Layout({ children, onLogin, onRegister }) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef();
   const isLoggedIn = !!localStorage.getItem("token");
@@ -11,8 +12,11 @@ export default function Layout({ children, onNavigate, onLogin, onRegister }) {
     localStorage.getItem("avatarUrl") ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
 
+  const navigate = useNavigate();
+
   const handleLogout = () => {
     localStorage.clear();
+    navigate("/");
     window.location.reload();
   };
 
@@ -34,54 +38,53 @@ export default function Layout({ children, onNavigate, onLogin, onRegister }) {
             <h4
               className="m-0 fw-bold"
               style={{ cursor: "pointer" }}
-              onClick={() => onNavigate("explore")}
+              onClick={() => navigate("/")}
             >
               📚 NhungTruc
             </h4>
             <nav className="d-flex gap-3">
               {(!role || role === "user") && (
-                <span style={{ cursor: "pointer" }} onClick={() => onNavigate("explore")}>
+                <span style={{ cursor: "pointer" }} onClick={() => navigate("/")}>
                   📖 Khám phá sách
                 </span>
               )}
 
-              <span style={{ cursor: "pointer" }} onClick={() => onNavigate("stats")}>
+              <span style={{ cursor: "pointer" }} onClick={() => navigate("/stats")}>
                 📊 Thống kê
               </span>
 
               {role === "admin" && (
                 <>
-                  <span style={{ cursor: "pointer" }} onClick={() => onNavigate("books")}>
+                  <span style={{ cursor: "pointer" }} onClick={() => navigate("/books")}>
                     📘 Quản lý sách
                   </span>
-                  <span style={{ cursor: "pointer" }} onClick={() => onNavigate("usermanager")}>
+                  <span style={{ cursor: "pointer" }} onClick={() => navigate("/usermanager")}>
                     👥 Người dùng
                   </span>
-                  <span style={{ cursor: "pointer" }} onClick={() => onNavigate("borrowmanager")}>
+                  <span style={{ cursor: "pointer" }} onClick={() => navigate("/borrowmanager")}>
                     📋 Mượn – Trả sách
                   </span>
                 </>
               )}
 
               {role === "mod" && (
-                <span style={{ cursor: "pointer" }} onClick={() => onNavigate("moderation")}>
+                <span style={{ cursor: "pointer" }} onClick={() => navigate("/moderation")}>
                   🛠 Kiểm duyệt sách
                 </span>
               )}
 
               {role === "superadmin" && (
-                <span style={{ cursor: "pointer" }} onClick={() => onNavigate("system")}>
+                <span style={{ cursor: "pointer" }} onClick={() => navigate("/system")}>
                   ⚙️ Quản lý hệ thống
                 </span>
               )}
 
               {role === "user" && (
-                <span style={{ cursor: "pointer" }} onClick={() => onNavigate("myborrows")}>
+                <span style={{ cursor: "pointer" }} onClick={() => navigate("/myborrows")}>
                   📖 Sách đang mượn
                 </span>
               )}
             </nav>
-
           </div>
 
           <div className="position-relative" ref={menuRef}>
@@ -102,15 +105,15 @@ export default function Layout({ children, onNavigate, onLogin, onRegister }) {
                     <li className="px-3 py-2 border-bottom text-muted">
                       Vai trò: <strong>{role || "?"}</strong>
                     </li>
-                    <li className="px-3 py-2 border-bottom" style={{ cursor: "pointer" }} onClick={() => { setShowMenu(false); onNavigate("profile"); }}>
+                    <li className="px-3 py-2 border-bottom" style={{ cursor: "pointer" }} onClick={() => { setShowMenu(false); navigate("/profile"); }}>
                       👤 Trang cá nhân
                     </li>
                     {role === "admin" && (
-                      <li className="px-3 py-2 border-bottom" style={{ cursor: "pointer" }} onClick={() => { setShowMenu(false); onNavigate("usermanager"); }}>
+                      <li className="px-3 py-2 border-bottom" style={{ cursor: "pointer" }} onClick={() => { setShowMenu(false); navigate("/usermanager"); }}>
                         👥 Quản lý người dùng
                       </li>
                     )}
-                    <li className="px-3 py-2 border-bottom" style={{ cursor: "pointer" }} onClick={() => { setShowMenu(false); onNavigate("changepassword"); }}>
+                    <li className="px-3 py-2 border-bottom" style={{ cursor: "pointer" }} onClick={() => { setShowMenu(false); navigate("/changepassword"); }}>
                       🔐 Đổi mật khẩu
                     </li>
                     <li className="px-3 py-2" style={{ cursor: "pointer" }} onClick={handleLogout}>
