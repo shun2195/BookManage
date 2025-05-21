@@ -3,7 +3,6 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const multer = require("multer");
 const path = require("path");
 const app = express();
 
@@ -54,14 +53,8 @@ const BorrowRecord = mongoose.model("BorrowRecord", new mongoose.Schema({
 }));
 
 // Cấu hình lưu ảnh
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, Date.now() + ext);
-  },
-});
-const upload = multer({ storage });
+const { upload } = require("./cloudinary");
+
 // ======= Tạo admin và mod nếu chưa có =======
 (async () => {
   const usersToCreate = [
@@ -124,13 +117,15 @@ app.get("/books", async (req, res) => {
   res.json(books);
 });
 // ➕ Thêm sách mới — chỉ admin
-app.post("/books", upload.single("cover"), async (req, res) => {
-  const { title, author, year, category } = req.body;
-  const coverUrl = req.file ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}` : "";
-  const book = new Book({ title, author, year, category, coverUrl });
+app.post("/books", authMiddleware, isAdmin, upload.single("cover"), async (req, res) => {
+  const { title, author, year, category, description } = req.body;
+  const coverUrl = req.file?.path || "";
+
+  const book = new Book({ title, author, year, category, description, coverUrl });
   await book.save();
   res.json(book);
 });
+
 
 app.get('/books/:id', async (req, res) => {
   const book = await Book.findById(req.params.id);
@@ -139,13 +134,16 @@ app.get('/books/:id', async (req, res) => {
 });
 
 // ❌ Xoá sách — chỉ admin
-app.put("/books/:id", upload.single("cover"), async (req, res) => {
-  const { title, author, year, category } = req.body;
-  const update = { title, author, year, category };
-  if (req.file) update.coverUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+app.put("/books/:id", authMiddleware, isAdmin, upload.single("cover"), async (req, res) => {
+  const { title, author, year, category, description } = req.body;
+  const update = { title, author, year, category, description };
+
+  if (req.file) update.coverUrl = req.file.path;
+
   const updated = await Book.findByIdAndUpdate(req.params.id, update, { new: true });
   res.json(updated);
 });
+
 app.delete("/books/:id", async (req, res) => {
   await Book.findByIdAndDelete(req.params.id);
   res.json({ message: "Đã xoá sách" });
