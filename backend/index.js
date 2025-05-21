@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -5,6 +6,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const path = require("path");
 const app = express();
+const cloudinary = require("cloudinary").v2;
+
 
 app.use(cors({
   origin: 'https://book-manage-ivory.vercel.app',
@@ -14,9 +17,15 @@ app.use(cors({
 app.use(express.json());
 
 // ======= Kết nối MongoDB =======
-mongoose.connect("mongodb+srv://nik2192005:Nhung123@cluster0.0wm9yn7.mongodb.net/bookdb?retryWrites=true&w=majority&appName=Cluster0", {
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
+ });
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 // ======= Mô hình =======
@@ -89,8 +98,9 @@ const authMiddleware = async (req, res, next) => {
 
   const token = authHeader.split(" ")[1];
   try {
-    process.env.JWT_SECRET || "secret_key"
-    req.user = decoded;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret_key");
+req.user = decoded;
+
     next();
   } catch (err) {
     return res.status(401).json({ message: "Token không hợp lệ" });
