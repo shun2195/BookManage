@@ -264,6 +264,7 @@ app.post("/login", async (req, res) => {
   avatarUrl: user.avatarUrl // ✅ thêm dòng này
 });
 
+});
 
 // 🔁 Đổi mật khẩu
 app.post("/change-password", async (req, res) => {
