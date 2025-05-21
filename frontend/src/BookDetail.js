@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import LoginForm from "./LoginForm";
 
 const API = "https://bookmanage-backend-ywce.onrender.com";
 
@@ -12,6 +13,7 @@ function BookDetail() {
   const [loading, setLoading] = useState(true);
   const [reviews, setReviews] = useState([]);
   const [reviewForm, setReviewForm] = useState({ rating: "", comment: "" });
+  const [showLogin, setShowLogin] = useState(false);
 
   const userId = localStorage.getItem("email");
 
@@ -35,13 +37,22 @@ function BookDetail() {
   }, [id]);
 
   const handleBorrow = async () => {
-    try {
-      await axios.post(`${API}/borrow`, { bookId: id, userId });
-      toast.success("📚 Đã mượn sách thành công!");
-    } catch {
-      toast.error("❌ Mượn sách thất bại hoặc đã mượn rồi.");
-    }
-  };
+  const token = localStorage.getItem("token");
+  if (!token) {
+    setShowLogin(true);
+    return;
+  }
+
+  try {
+    await axios.post(`${API}/borrow`, { bookId: id }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    toast.success("📚 Đã mượn sách thành công!");
+  } catch {
+    toast.error("❌ Mượn sách thất bại hoặc đã mượn rồi.");
+  }
+};
+
 
   const handleReviewChange = (e) => {
     setReviewForm({ ...reviewForm, [e.target.name]: e.target.value });

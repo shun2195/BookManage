@@ -80,6 +80,28 @@ function RegisterForm({ onSwitchToLogin, onClose }) {
           </div>
         </form>
         <ToastContainer />
+        {showLogin && (
+          <div className="modal d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content p-3">
+                <button
+                  className="btn-close ms-auto"
+                  onClick={() => setShowLogin(false)}
+                ></button>
+                <LoginForm
+                  onLoginSuccess={() => {
+                    setShowLogin(false);
+                    toast.success("✅ Đăng nhập thành công, vui lòng nhấn lại 'Mượn sách'");
+                  }}
+                  onSwitchToRegister={() => {
+                    toast.info("👉 Bạn cần đăng ký tài khoản để tiếp tục.");
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
