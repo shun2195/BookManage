@@ -35,10 +35,10 @@ function ExploreBooks() {
 
   return (
     <div className="container mt-4">
-      <h3 className="text-primary mb-3">📚 Khám phá sách</h3>
+      <h3 className="text-primary mb-4">📚 Khám phá sách</h3>
 
-      <div className="row mb-4">
-        <div className="col-md-6">
+      <div className="row align-items-center mb-4">
+        <div className="col-md-6 mb-2">
           <input
             type="text"
             className="form-control"
@@ -47,7 +47,7 @@ function ExploreBooks() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="col-md-4">
+        <div className="col-md-4 mb-2">
           <select
             className="form-select"
             value={filter}
@@ -65,19 +65,30 @@ function ExploreBooks() {
         {paginated.map((book) => (
           <div className="col-md-4 mb-4" key={book._id}>
             <div className="card h-100 shadow-sm">
-              {book.coverUrl && (
+              {book.coverUrl ? (
                 <img
                   src={book.coverUrl}
                   className="card-img-top"
                   alt="Ảnh bìa"
-                  style={{ height: "220px", objectFit: "cover" }}
+                  style={{ height: "220px", objectFit: "cover", borderTopLeftRadius: "6px", borderTopRightRadius: "6px" }}
                 />
+              ) : (
+                <div
+                  className="d-flex justify-content-center align-items-center bg-light text-muted"
+                  style={{ height: "220px" }}
+                >
+                  Không có ảnh bìa
+                </div>
               )}
               <div className="card-body">
-                <h5 className="card-title">{book.title}</h5>
+                <h5 className="card-title text-truncate" title={book.title}>{book.title}</h5>
+                <p className="card-text mb-1">
+                  <strong>Tác giả:</strong> {book.author}
+                </p>
+                <p className="card-text mb-1">
+                  <strong>Năm:</strong> {book.year}
+                </p>
                 <p className="card-text">
-                  <strong>Tác giả:</strong> {book.author}<br />
-                  <strong>Năm:</strong> {book.year}<br />
                   <strong>Thể loại:</strong> {book.category}
                 </p>
               </div>
@@ -88,7 +99,7 @@ function ExploreBooks() {
       </div>
 
       {totalPages > 1 && (
-        <nav className="d-flex justify-content-center mt-3">
+        <nav className="d-flex justify-content-center mt-4">
           <ul className="pagination">
             {Array.from({ length: totalPages }, (_, i) => (
               <li
