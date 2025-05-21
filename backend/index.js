@@ -258,11 +258,12 @@ app.post("/login", async (req, res) => {
   const token = jwt.sign({ userId: user._id }, "secret_key", { expiresIn: "1h" });
 
   res.json({
-    token,
-    role: user.role,
-    name: user.name
-  });
+  token,
+  role: user.role,
+  name: user.name,
+  avatarUrl: user.avatarUrl // ✅ thêm dòng này
 });
+
 
 // 🔁 Đổi mật khẩu
 app.post("/change-password", async (req, res) => {
@@ -301,19 +302,21 @@ app.put("/users/:id/role", authMiddleware, isAdmin, async (req, res) => {
 
 // Upload avatar
 const { uploader } = require("cloudinary").v2;
-
+cloudinary.config({
+  cloud_name: "dotlbin8d",
+  api_key: "435742649524788",
+  api_secret: "Lju1lOwPJVl4WFovWnzbS4OvkNk"
+});
 app.post("/users/upload-avatar", authMiddleware, upload.single("avatar"), async (req, res) => {
   try {
-    const file = req.file;
-    const result = await uploader.upload(file.path, {
-      folder: "avatars", // Tạo folder riêng trong Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "avatars"
     });
-
-    await User.findByIdAndUpdate(req.user.userId, { avatarUrl: result.secure_url });
-    res.json({ avatarUrl: result.secure_url });
+    const url = result.secure_url;
+    await User.findByIdAndUpdate(req.user.userId, { avatarUrl: url });
+    res.json({ avatarUrl: url });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Lỗi khi upload avatar" });
+    res.status(500).json({ message: "Upload thất bại", error: err.message });
   }
 });
 

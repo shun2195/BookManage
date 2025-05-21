@@ -26,6 +26,7 @@ function LoginForm({ onLoginSuccess, onSwitchToRegister, onClose }) {
       localStorage.setItem("role", res.data.role);
       localStorage.setItem("name", res.data.name);
       localStorage.setItem("email", email);
+      localStorage.setItem("avatarUrl", res.data.avatarUrl || "");
 
       toast.success("✅ Đăng nhập thành công!");
       onLoginSuccess();
