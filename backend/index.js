@@ -6,7 +6,11 @@ const jwt = require("jsonwebtoken");
 const path = require("path");
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: 'https://book-manage-ivory.vercel.app',
+  credentials: true // nếu bạn dùng cookie hoặc auth header
+}));
+
 app.use(express.json());
 
 // ======= Kết nối MongoDB =======
