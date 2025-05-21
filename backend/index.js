@@ -51,9 +51,6 @@ const BorrowRecord = mongoose.model("BorrowRecord", new mongoose.Schema({
   }
 }));
 
-//const multer = require("multer");
-const path = require("path");
-
 // Cấu hình lưu ảnh
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
